@@ -9,14 +9,13 @@ export async function createForceGraph(wikiId, onClick) {
 
     console.log("Fetched data:", data); // Debugging line
 
-    // Check if data has nodes and links
     if (!data.nodes || !data.links) {
       throw new Error("Data format error: 'nodes' or 'links' is missing");
     }
 
     const nodes = data.nodes.map((d) => ({
       id: d.id,
-      title: d.name, // Ensure you use the correct property name
+      title: d.name,
       sentiment: +d.sentiment,
     }));
 
@@ -147,6 +146,8 @@ function ForceGraph({ nodes, links }, options = {}) {
     .join("circle")
     .attr("r", nodeRadius)
     .call(drag(simulation))
+    .on("mouseover", handleMouseOver) // Add mouseover event
+    .on("mouseout", handleMouseOut) // Add mouseout event
     .on("click", onClick); // Add click event listener
 
   if (W) link.attr("stroke-width", ({ index: i }) => W[i]);
@@ -194,6 +195,20 @@ function ForceGraph({ nodes, links }, options = {}) {
       .on("start", dragstarted)
       .on("drag", dragged)
       .on("end", dragended);
+  }
+
+  // Add mouseover and mouseout event handlers
+  function handleMouseOver(event, d) {
+    const tooltip = d3.select("#tooltip");
+    tooltip.style("display", "block");
+    tooltip
+      .html(`ID: ${d.id}<br>Name: ${d.title}<br>Sentiment: ${d.sentiment}`)
+      .style("left", event.pageX + 10 + "px")
+      .style("top", event.pageY - 28 + "px");
+  }
+
+  function handleMouseOut() {
+    d3.select("#tooltip").style("display", "none");
   }
 
   return Object.assign(svg.node(), { scales: { color } });

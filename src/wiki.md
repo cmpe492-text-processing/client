@@ -4,22 +4,49 @@ toc: false
 sidebar: false
 ---
 
+```html
+<style>
+  #tooltip {
+    position: absolute;
+    text-align: center;
+    width: 120px;
+    height: auto;
+    padding: 5px;
+    font: 12px sans-serif;
+    background: lightsteelblue;
+    border: 0px;
+    border-radius: 8px;
+    pointer-events: none;
+    display: none;
+  }
+
+  #info-box {
+    margin-top: 20px;
+    border: 1px solid black;
+    padding: 10px;
+    width: 300px;
+  }
+</style>
+```
+
 <div class="grid grid-cols-12">
   <div class="card">
     <h2>Most Occurred Entities Table</h2>
     <div id="tableContainer"></div>
   </div>
   <div class="card">
+    <h2>Graph</h2>
+    <div id="graph">
+      <div id="tooltip"></div>
+    </div>
+    <div id="info-box">
+        <h3>Node Information</h3>
+        <p id="node-info"></p>
+    </div>
+  </div>
+  <div class="card">
     <h2>Sentiment Occurrence Count</h2>
     <div id="histogram_2"></div>
-  </div>
-  <div class="card">
-    <h2>Occurrence Histogram</h2>
-    <div id="histogram"></div>
-  </div>
-  <div class="card">
-    <h2>Graph</h2>
-    <div id="graph"></div>
   </div>
 </div>
 
@@ -209,7 +236,6 @@ import { createForceGraph } from "./components/graph.js";
 
 const graphContainer = document.getElementById("graph");
 
-// fetch from /graph?id=wiki_id endpoint, the result is a JSON object
 /* 
 {
                             nodes: [
@@ -229,9 +255,12 @@ const graphContainer = document.getElementById("graph");
                         }
  */
 
-createForceGraph(wiki_id, (event, d) => {
-  console.log("Node clicked:", d);
-})
+function handleClick(event, node) {
+  const infoBox = document.getElementById("node-info");
+  infoBox.innerHTML = `ID: ${node.id}<br>Name: ${node.title}<br>Sentiment: ${node.sentiment}`;
+}
+
+createForceGraph(wiki_id, handleClick)
   .then((graph) => {
     graphContainer.appendChild(graph);
   })

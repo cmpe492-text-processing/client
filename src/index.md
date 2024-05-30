@@ -1,173 +1,242 @@
 ---
-title: "Project X"
+title: Wiki Page
 toc: false
 sidebar: false
 ---
 
-<style>
-    #part-of-speech {
-        width: 100%;
-        height: 600px;
-        padding: 10px;
-        border-radius: 5px; 
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        overflow: hidden;
-        /*overflow-x: auto;*/
-        /*white-space: nowrap;*/
-    }
-
-    @media (max-width: 768px) {
-        .svg-container {
-            height: 400px; /* Adjust height for smaller devices */
-        }
-    }
-
-
-    .svg-container {
-        width: 100%;      /* Full width of its parent container */
-        height: 600px;    /* Sufficient height to display SVG */
-        border: 2px solid #4CAF50; /* Solid green border */
-        border-radius: 8px; /* Rounded corners */
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15); /* Subtle shadow for depth */
-        background-color: #f9f9f9; /* Light grey background */
-        overflow-x: auto; /* Allows horizontal scrolling */
-        overflow-y: hidden; /* Disables vertical scrolling */
-        padding: 20px; /* Padding inside the container for some spacing around the SVG */
-    }
-</style>
-
-<script src="https://d3js.org/d3.v7.min.js"></script>
-
-<div style="display: flex; justify-content: center; align-items: center; height: 20vh; flex-direction: column">
-    <h2>Search any sentence</h2>
-    <br>
-    <input type="text" id="search-bar" placeholder="Donald Trump called Joe Biden 'Dumb Joe'" style="width: 100%; padding: 10px; font-size: 16px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+<div class="grid grid-cols-12">
+  <div class="card">
+    <h2>Most Occurred Entities Table</h2>
+    <div id="tableContainer"></div>
+  </div>
+  <div class="card">
+    <h2>Sentiment Occurrence Count</h2>
+    <div id="histogram_2"></div>
+  </div>
+  <div class="card">
+    <h2>Occurrence Histogram</h2>
+    <div id="histogram"></div>
+  </div>
+  <div class="card">
+    <h2>Graph</h2>
+    <div id="graph"></div>
+  </div>
 </div>
-<div id="results-table"></div>
-<br/>
-<div id="results-sentiment"></div>
-<br/>
-<div id="results-nltk"></div>
-<div id="part-of-speech" class="svg-container"></div>
 
 ```js
-function sentimentChart(data, { width }) {
-  return Plot.plot({
-    width: width,
-    height: 300,
-    marginTop: 20,
-    marginLeft: 50,
-    x: { domain: [-1, 1], grid: true, label: "Score" },
-    y: { domain: data.map((d) => d.sentiment), label: null },
-    marks: [
-      Plot.barX(data, { x: "score", y: "sentiment", fill: "color", tip: true }),
-      Plot.ruleX([0]),
-    ],
+function createTable(data) {
+  const table = document.createElement("table");
+  const thead = document.createElement("thead");
+  const tbody = document.createElement("tbody");
+
+  table.style.maxWidth = "100%";
+
+  const headerRow = document.createElement("tr");
+  const headers = ["Occurrence Count", "Name", "Description", "Instance Of"];
+  headers.forEach((headerText) => {
+    const th = document.createElement("th");
+    th.textContent = headerText;
+    th.style.border = "1px solid black";
+    th.style.padding = "10px";
+    th.style.backgroundColor = "#f2f2f2";
+    th.style.textAlign = "left";
+    th.style.fontWeight = "bold";
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+
+  // Map to store row elements by wiki_id for later updating
+  const rowsMap = new Map();
+  const rowsMapInfo = new Map();
+
+  data.forEach((item) => {
+    const row = document.createElement("tr");
+
+    const cellCount = document.createElement("td");
+    cellCount.textContent = item.n;
+    cellCount.style.border = "1px solid black";
+    cellCount.style.padding = "10px";
+    row.appendChild(cellCount);
+
+    const cellName = document.createElement("td");
+    cellName.textContent = item.name;
+    cellName.style.border = "1px solid black";
+    cellName.style.padding = "10px";
+    row.appendChild(cellName);
+
+    const cellDescription = document.createElement("td");
+    cellDescription.textContent = "Loading..."; // Placeholder text
+    cellDescription.style.border = "1px solid black";
+    cellDescription.style.padding = "10px";
+    row.appendChild(cellDescription);
+
+    const cellInstanceOf = document.createElement("td");
+    cellInstanceOf.textContent = "Loading..."; // Placeholder text
+    cellInstanceOf.style.border = "1px solid black";
+    cellInstanceOf.style.padding = "10px";
+    row.appendChild(cellInstanceOf);
+
+    tbody.appendChild(row);
+
+    // Store the description cell in the map with wiki_id as the key
+    rowsMap.set(item.wiki_id, cellDescription);
+    rowsMapInfo.set(item.wiki_id, cellInstanceOf);
+  });
+
+  table.appendChild(tbody);
+  return { table, rowsMap, rowsMapInfo };
+}
+```
+
+```js
+function getWikiInfo(wiki_id) {
+  return fetch(
+    `https://project-x-back-a4ab947e69c6.herokuapp.com/wiki-info?id=${wiki_id}`
+  )
+    .then((response) => response.json())
+    .then((data) => data)
+    .catch((error) => {
+      console.error("Error fetching wiki info:", error);
+      return { description: "Error loading description" };
+    });
+}
+
+function updateDescriptions(rowsMap) {
+  rowsMap.forEach((cell, wiki_id) => {
+    getWikiInfo(wiki_id).then((data) => {
+      cell.textContent = data.description || "No description available";
+    });
   });
 }
 
-function enableZoomAndPan() {
-  const svg = d3.select("#part-of-speech svg");
-  const container = d3.select("#part-of-speech");
-
-  const zoom = d3
-    .zoom()
-    .scaleExtent([0.5, 8]) // Limits for zoom scaling (0.5x to 8x)
-    .on("zoom", (event) => {
-      svg.attr("transform", event.transform); // Apply zoom and pan transformations
+function updateInstanceOf(rowsMap) {
+  rowsMap.forEach((cell, wiki_id) => {
+    getWikiInfo(wiki_id).then((data) => {
+      cell.textContent = data.instance_of || "No instance of available";
     });
+  });
+}
+```
 
-  container.call(zoom);
+```js
+const base = document.getElementById("base");
+const histogram = document.getElementById("histogram");
+const histogram_2 = document.getElementById("histogram_2");
+const urlParams = new URLSearchParams(window.location.search);
+const wiki_id = urlParams.get("id");
+
+async function fetchHumanOccurrenceHistogramData(wikiId) {
+  const response = await fetch(
+    `https://project-x-back-a4ab947e69c6.herokuapp.com/histogram/occurrence?id=${wikiId}`
+  );
+  return response.json();
 }
 
-document
-  .getElementById("search-bar")
-  .addEventListener("keypress", function (event) {
-    if (event.key === "Enter") {
-      const query = event.target.value;
-      fetch(
-        `https://project-x-back-a4ab947e69c6.herokuapp.com/search?q=${encodeURIComponent(
-          query
-        )}`
-      )
-        .then((response) => response.json())
-        .then((data) => {
-          console.log("Search results:", data);
-          const results_sentiment =
-            document.getElementById("results-sentiment");
-          const results_table = document.getElementById("results-table");
-          results_sentiment.innerHTML = "";
-          results_table.innerHTML = "";
+async function fetchFeatureExtractionJSON(wikiId) {
+  const response = await fetch(
+    `https://project-x-back-a4ab947e69c6.herokuapp.com/histogram/co-occurrence?id=${wikiId}`
+  );
+  return response.json();
+}
 
-          const plotData = [
-            {
-              sentiment: " Compou––≠nd",
-              score: data.scores.compound,
-              color: data.scores.compound >= 0 ? "#4caf50" : "#f44336",
-            },
-            {
-              sentiment: " Positive",
-              score: data.scores.pos,
-              color: "#2196f3",
-            },
-            {
-              sentiment: " Negative",
-              score: -data.scores.neg,
-              color: "#f44336",
-            },
-            { sentiment: " Neutral", score: data.scores.neu, color: "#ffeb3b" },
-          ];
+if (!wiki_id) {
+  histogram.textContent = "No wiki ID provided, please provide a wiki id";
+}
 
-          const chart = sentimentChart(plotData, { width: 900 });
+document.title = `Wiki ID: ${wiki_id}`;
 
-          const text = data.text;
-          const entities = data.entities;
-          const textDiv = document.createElement("div");
-          textDiv.innerHTML = "<h2>Text</h2>";
-          let i = 0;
-          entities.forEach((entity) => {
-            textDiv.innerHTML += text.slice(i, entity.begin);
-            const link = document.createElement("a");
-            link.href = `http://127.0.0.1:3000/wiki?id=${entity.wiki_id}`;
-            link.textContent = entity.mention;
-            textDiv.appendChild(link);
-            i = entity.end;
-          });
-          textDiv.innerHTML += text.slice(i);
-          results_table.appendChild(textDiv);
+fetchFeatureExtractionJSON(wiki_id).then((data) => {
+  const most_occurred_entities = data.most_occurred_entities;
+  const main_entity = data.main_entity?.sentiments_extended;
+  const negatives = main_entity
+    .map((d) => -d?.negative)
+    .filter((d) => d?.negative != 0);
+  const positives = main_entity
+    .map((d) => d?.positive)
+    .filter((d) => d?.positive != 0);
 
-          results_sentiment.appendChild(chart);
+  const tableContainer = document.getElementById("tableContainer");
+  const { table, rowsMap, rowsMapInfo } = createTable(most_occurred_entities);
+  updateDescriptions(rowsMap);
+  updateInstanceOf(rowsMapInfo);
+  tableContainer.appendChild(table);
 
-          const url = `https://project-x-back-a4ab947e69c6.herokuapp.com/part-of-speech?q=${encodeURIComponent(
-            query
-          )}`;
+  const positiveBinGenerator = d3.bin().domain([0.001, 1]).thresholds(20);
+  const negativeBinGenerator = d3.bin().domain([-1, -0.001]).thresholds(20);
 
-          fetch(url)
-            .then((response) => {
-              if (response.status === 204) {
-                console.error("Empty query");
-                return;
-              }
-              if (!response.ok) {
-                throw new Error("Network response was not ok");
-              }
-              return response.text();
-            })
-            .then((svg) => {
-              const container = document.getElementById("part-of-speech");
-              container.innerHTML = svg; // Insert the SVG directly into the div
-              enableZoomAndPan(); // Enable zoom and pan after SVG is loaded
-            })
-            .catch((error) =>
-              console.error(
-                "There was a problem with the fetch operation:",
-                error
-              )
-            );
-        })
-        .catch((error) =>
-          console.error("Error fetching search results:", error)
-        );
-    }
+  const binsPositives = positiveBinGenerator(positives);
+  const binsNegatives = negativeBinGenerator(negatives);
+
+  const chart = Plot.plot({
+    x: {
+      label: "Value Range (0 to 1)",
+      domain: [-1, 1],
+    },
+    y: {
+      label: "Occurrence Count",
+    },
+    marks: [
+      Plot.rectY(binsPositives, {
+        x1: (d) => d.x0,
+        x2: (d) => d.x1,
+        y: (d) => d.length,
+        fill: "green",
+        title: "Positive Values",
+      }),
+      Plot.rectY(binsNegatives, {
+        x1: (d) => d.x0,
+        x2: (d) => d.x1,
+        y: (d) => d.length,
+        fill: "red",
+        title: "Negative Values",
+      }),
+      Plot.ruleY([0]),
+    ],
+    width: 1200,
+    height: 600,
+  });
+  document.getElementById("histogram_2").appendChild(chart);
+
+  most_occurred_entities.forEach((entity) => {
+    data = getWikiInfo(entity.wiki_id).then((data) => {});
+  });
+});
+```
+
+```js
+import { createForceGraph } from "./components/graph.js";
+
+const graphContainer = document.getElementById("graph");
+
+// fetch from /graph?id=wiki_id endpoint, the result is a JSON object
+/* 
+{
+                            nodes: [
+                                {
+                                    id: int,
+                                    name: str,
+                                    type: str
+                                }
+                            ],
+                            links: [
+                                {
+                                    source: int,
+                                    target: int,
+                                    type: str
+                                }
+                            ]
+                        }
+ */
+
+createForceGraph(wiki_id, (event, d) => {
+  console.log("Node clicked:", d);
+})
+  .then((graph) => {
+    graphContainer.appendChild(graph);
+  })
+  .catch((error) => {
+    console.error("Error fetching graph data:", error);
+    graphContainer.textContent = "Error loading graph data";
   });
 ```
