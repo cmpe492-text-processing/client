@@ -3,7 +3,7 @@ import * as Plot from "https://cdn.jsdelivr.net/npm/@observablehq/plot@0.5/+esm"
 
 export async function createHistogram(wikiId) {
   const response = await fetch(
-    `whimsical-fox-5c5d4c.netlify.app/histogram/co-occurrence?id=${wikiId}`
+    `https://project-x-back-a4ab947e69c6.herokuapp.com/histogram/co-occurrence?id=${wikiId}`
   );
   const data = await response.json();
   const main_entity = data.main_entity?.sentiments_extended;

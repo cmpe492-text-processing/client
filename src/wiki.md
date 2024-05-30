@@ -91,7 +91,9 @@ function createTable(data) {
 
 ```js
 function getWikiInfo(wiki_id) {
-  return fetch(`whimsical-fox-5c5d4c.netlify.app/wiki-info?id=${wiki_id}`)
+  return fetch(
+    `https://project-x-back-a4ab947e69c6.herokuapp.com/wiki-info?id=${wiki_id}`
+  )
     .then((response) => response.json())
     .then((data) => data)
     .catch((error) => {
@@ -126,14 +128,14 @@ const wiki_id = urlParams.get("id");
 
 async function fetchHumanOccurrenceHistogramData(wikiId) {
   const response = await fetch(
-    `whimsical-fox-5c5d4c.netlify.app/histogram/occurrence?id=${wikiId}`
+    `https://project-x-back-a4ab947e69c6.herokuapp.com/histogram/occurrence?id=${wikiId}`
   );
   return response.json();
 }
 
 async function fetchFeatureExtractionJSON(wikiId) {
   const response = await fetch(
-    `whimsical-fox-5c5d4c.netlify.app/histogram/co-occurrence?id=${wikiId}`
+    `https://project-x-back-a4ab947e69c6.herokuapp.com/histogram/co-occurrence?id=${wikiId}`
   );
   return response.json();
 }

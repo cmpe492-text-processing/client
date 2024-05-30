@@ -86,7 +86,9 @@ document
     if (event.key === "Enter") {
       const query = event.target.value;
       fetch(
-        `whimsical-fox-5c5d4c.netlify.app/search?q=${encodeURIComponent(query)}`
+        `https://project-x-back-a4ab947e69c6.herokuapp.com/search?q=${encodeURIComponent(
+          query
+        )}`
       )
         .then((response) => response.json())
         .then((data) => {
@@ -136,7 +138,7 @@ document
 
           results_sentiment.appendChild(chart);
 
-          const url = `whimsical-fox-5c5d4c.netlify.app/part-of-speech?q=${encodeURIComponent(
+          const url = `https://project-x-back-a4ab947e69c6.herokuapp.com/part-of-speech?q=${encodeURIComponent(
             query
           )}`;
 

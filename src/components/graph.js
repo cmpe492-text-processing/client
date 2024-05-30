@@ -3,7 +3,7 @@ import * as d3 from "https://cdn.jsdelivr.net/npm/d3@6/+esm";
 export async function createForceGraph(wikiId, onClick) {
   try {
     const response = await fetch(
-      `whimsical-fox-5c5d4c.netlify.app/graph?id=${wikiId}`
+      `https://project-x-back-a4ab947e69c6.herokuapp.com/graph?id=${wikiId}`
     );
     const data = await response.json();
 
