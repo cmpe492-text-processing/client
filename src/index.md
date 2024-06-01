@@ -8,6 +8,12 @@ sidebar: false
     #part-of-speech {
     }
 
+    .part-of-speech-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
     .part-of-speech-active {
         max-width: 100%;
         height: 100%;
@@ -49,7 +55,9 @@ sidebar: false
 <div id="results-table" style="font-size: xx-large; display: flex; justify-content: center; align-items: center;" ></div>
 <br>
 <br/>
+<div class="part-of-speech-container">
 <div id="part-of-speech" class=`svg-container display-none`></div>
+</div>
 <br>
 <div id="results-sentiment"></div>
 <br/>
