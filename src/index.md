@@ -65,9 +65,9 @@ sidebar: false
 <div id="part-of-speech" class=`svg-container display-none`></div>
 </div>
 <br>
-<div class="results-sentiment-container">
+
 <div id="results-sentiment"></div>
-</div>
+
 <br/>
 
 ```js
