@@ -7,12 +7,12 @@ sidebar: false
 <style>
     #part-of-speech {
         width: 100%;
-        height: 600px;
+        height: 100%;
         padding: 10px;
         border-radius: 5px; 
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        
         overflow: hidden;
-        /*overflow-x: auto;*/
+        background-color: #0000;
         /*white-space: nowrap;*/
     }
 
@@ -26,9 +26,9 @@ sidebar: false
     .svg-container {
         width: 100%;      /* Full width of its parent container */
         height: 600px;    /* Sufficient height to display SVG */
-        border: 2px solid #4CAF50; /* Solid green border */
+        border: 2px solid #1111; /* Solid green border */
         border-radius: 8px; /* Rounded corners */
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15); /* Subtle shadow for depth */
+        box-shadow: 0 4px 8px rgba(0,0,0,0); /* Subtle shadow for depth */
         background-color: #f9f9f9; /* Light grey background */
         overflow-x: auto; /* Allows horizontal scrolling */
         overflow-y: hidden; /* Disables vertical scrolling */
@@ -45,10 +45,10 @@ sidebar: false
 </div>
 <div id="results-table"></div>
 <br/>
+<div id="part-of-speech" class="svg-container"></div>
 <div id="results-sentiment"></div>
 <br/>
 <div id="results-nltk"></div>
-<div id="part-of-speech" class="svg-container"></div>
 
 ```js
 function sentimentChart(data, { width }) {
@@ -70,11 +70,14 @@ function enableZoomAndPan() {
   const svg = d3.select("#part-of-speech svg");
   const container = d3.select("#part-of-speech");
 
+  // Select both 'g' and 'text' elements
+  const elements = svg.selectAll(".displacy-token, .displacy-arrow");
+
   const zoom = d3
     .zoom()
     .scaleExtent([0.5, 8]) // Limits for zoom scaling (0.5x to 8x)
     .on("zoom", (event) => {
-      svg.attr("transform", event.transform); // Apply zoom and pan transformations
+      elements.attr("transform", event.transform); // Apply transformations to both 'g' and 'text' elements
     });
 
   container.call(zoom);
