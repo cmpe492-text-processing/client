@@ -9,7 +9,7 @@ sidebar: false
     }
 
     .part-of-speech-active {
-        width: 100%;
+        max-width: 100%;
         height: 100%;
         padding: 10px;
         overflow: hidden;
@@ -25,7 +25,7 @@ sidebar: false
 
 
     .svg-container {
-        width: 100%;      /* Full width of its parent container */
+        max-width: 100%;
         height: 600px;    /* Sufficient height to display SVG */
         border: 2px solid #1111; /* Solid green border */
         border-radius: 8px; /* Rounded corners */
@@ -171,6 +171,9 @@ document
               container.classList.remove("display-none"); // Remove the 'display-none' class
               container.classList.add("display-block"); // Add the 'display-block' class
               container.classList.add("part-of-speech-active"); // Add the 'part-of-speech-active' class
+              const width = svg.match(/width="(\d+)"/)[1] + "px"; // Extract the width from the SVG
+              container.style.width = width;
+
               container.innerHTML = svg; // Insert the SVG directly into the div
               enableZoomAndPan(); // Enable zoom and pan after SVG is loaded
             })
