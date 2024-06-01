@@ -6,16 +6,17 @@ sidebar: false
 
 <style>
     #part-of-speech {
+    }
+
+    .part-of-speech-active {
         width: 100%;
         height: 100%;
         padding: 10px;
-        border-radius: 5px; 
-        
         overflow: hidden;
         background-color: #0000;
-        /*white-space: nowrap;*/
+        border-radius: 5px; 
+        border: 1px solid #ccc;
     }
-
     @media (max-width: 768px) {
         .svg-container {
             height: 400px; /* Adjust height for smaller devices */
@@ -38,14 +39,18 @@ sidebar: false
 
 <script src="https://d3js.org/d3.v7.min.js"></script>
 
-<div style="display: flex; justify-content: center; align-items: center; height: 20vh; flex-direction: column">
-    <h2>Search any sentence</h2>
+<div style="display: flex; justify-content: center; align-items: center; flex-direction: column">
+    <h1>Search any sentence</h1>
     <br>
-    <input type="text" id="search-bar" placeholder="Donald Trump called Joe Biden 'Dumb Joe'" style="width: 100%; padding: 10px; font-size: 16px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+    <input type="text" id="search-bar" placeholder="Donald Trump called Joe Biden 'Dumb Joe'" style="width: 100%; padding: 10px; font-size: 16px;  box-shadow: 0 5px 2px rgba(0,0,0,0.1);">
+    <br>
+    <br>
 </div>
-<div id="results-table"></div>
+<div id="results-table" style="font-size: xx-large; display: flex; justify-content: center; align-items: center;" ></div>
+<br>
 <br/>
-<div id="part-of-speech" class="svg-container"></div>
+<div id="part-of-speech" class=`svg-container display-none`></div>
+<br>
 <div id="results-sentiment"></div>
 <br/>
 <div id="results-nltk"></div>
@@ -54,14 +59,14 @@ sidebar: false
 function sentimentChart(data, { width }) {
   return Plot.plot({
     width: width,
-    height: 300,
+    height: 500,
     marginTop: 20,
     marginLeft: 50,
-    x: { domain: [-1, 1], grid: true, label: "Score" },
-    y: { domain: data.map((d) => d.sentiment), label: null },
+    y: { domain: [-1, 1], grid: true, label: "Score" },
+    x: { domain: data.map((d) => d.sentiment), label: null },
     marks: [
-      Plot.barX(data, { x: "score", y: "sentiment", fill: "color", tip: true }),
-      Plot.ruleX([0]),
+      Plot.barY(data, { x: "sentiment", y: "score", fill: "color", tip: true }),
+      Plot.ruleY([0]),
     ],
   });
 }
@@ -104,7 +109,7 @@ document
 
           const plotData = [
             {
-              sentiment: " Compou––≠nd",
+              sentiment: " Compound",
               score: data.scores.compound,
               color: data.scores.compound >= 0 ? "#4caf50" : "#f44336",
             },
@@ -121,12 +126,18 @@ document
             { sentiment: " Neutral", score: data.scores.neu, color: "#ffeb3b" },
           ];
 
-          const chart = sentimentChart(plotData, { width: 900 });
+          const containerWidth = d3
+            .select("#part-of-speech")
+            .node()
+            .getBoundingClientRect().width;
+          const chartWidth = containerWidth * 0.5; // 50% of the container's width
+
+          const chart = sentimentChart(plotData, { width: chartWidth });
 
           const text = data.text;
           const entities = data.entities;
           const textDiv = document.createElement("div");
-          textDiv.innerHTML = "<h2>Text</h2>";
+
           let i = 0;
           entities.forEach((entity) => {
             textDiv.innerHTML += text.slice(i, entity.begin);
@@ -138,7 +149,6 @@ document
           });
           textDiv.innerHTML += text.slice(i);
           results_table.appendChild(textDiv);
-
           results_sentiment.appendChild(chart);
 
           const url = `https://project-x-back-a4ab947e69c6.herokuapp.com/part-of-speech?q=${encodeURIComponent(
@@ -158,6 +168,9 @@ document
             })
             .then((svg) => {
               const container = document.getElementById("part-of-speech");
+              container.classList.remove("display-none"); // Remove the 'display-none' class
+              container.classList.add("display-block"); // Add the 'display-block' class
+              container.classList.add("part-of-speech-active"); // Add the 'part-of-speech-active' class
               container.innerHTML = svg; // Insert the SVG directly into the div
               enableZoomAndPan(); // Enable zoom and pan after SVG is loaded
             })
