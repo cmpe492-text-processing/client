@@ -14,6 +14,12 @@ sidebar: false
       align-items: center;
     }
 
+    .results-sentiment-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
     .part-of-speech-active {
         max-width: 100%;
         height: 100%;
@@ -59,9 +65,10 @@ sidebar: false
 <div id="part-of-speech" class=`svg-container display-none`></div>
 </div>
 <br>
+<div class="results-sentiment-container">
 <div id="results-sentiment"></div>
+</div>
 <br/>
-<div id="results-nltk"></div>
 
 ```js
 function sentimentChart(data, { width }) {
