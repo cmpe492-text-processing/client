@@ -273,8 +273,11 @@ const graphContainer = document.getElementById("graph");
  */
 
 createForceGraph(wiki_id)
-  .then((graph) => {
-    graphContainer.appendChild(graph);
+  .then((svg) => {
+    // First clear the graph container to prevent multiple graphs from being displayed
+    graphContainer.innerHTML = "";
+    // Append the SVG to the container
+    graphContainer.appendChild(svg);
     enableZoomAndPanGraph();
   })
   .catch((error) => {

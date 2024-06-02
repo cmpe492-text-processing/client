@@ -26,70 +26,6 @@ export async function createForceGraph(wikiId) {
       weight: +d.weight,
     }));
 
-    const onClick = (event, d) => {
-      const infoBox = document.getElementById("node-info");
-      infoBox.innerHTML = `ID: ${d.id}<br>Name: ${d.title}<br>Sentiment: ${d.sentiment}`;
-      const neighboursTable = document.getElementById("neighbours");
-      const neighbours = links.filter(
-        (l) => l.source === d.id || l.target === d.id
-      );
-      const neighbourNodesWithWeights = neighbours.map((l) => {
-        const neighbour = l.source === d.id ? l.target : l.source;
-        return { ...nodes.find((n) => n.id === neighbour), weight: l.weight };
-      });
-
-      const neighbourNodesWithWeightsSorted = neighbourNodesWithWeights.sort(
-        (a, b) => b.weight - a.weight
-      );
-
-      // Clear the existing content
-      neighboursTable.innerHTML = "";
-
-      // Create and append the heading
-      const heading = document.createElement("h2");
-      heading.textContent = `Neighbours of the node ${d.title}`;
-      neighboursTable.appendChild(heading);
-
-      // Create the table
-      const table = document.createElement("table");
-      table.style.width = "100%";
-
-      // Create the table header
-      const thead = document.createElement("thead");
-      const headerRow = document.createElement("tr");
-      ["Name", "Sentiment", "Weight"].forEach((text) => {
-        const th = document.createElement("th");
-        th.style.border = "1px solid black";
-        th.style.padding = "10px";
-        th.style.backgroundColor = "#f2f2f2";
-        th.style.textAlign = "left";
-        th.style.fontWeight = "bold";
-        th.textContent = text;
-        headerRow.appendChild(th);
-      });
-      thead.appendChild(headerRow);
-      table.appendChild(thead);
-
-      // Create the table body
-      const tbody = document.createElement("tbody");
-      tbody.id = "neighbours-table";
-      neighbourNodesWithWeightsSorted.forEach((n) => {
-        const tr = document.createElement("tr");
-        [n.title, n.sentiment, n.weight].forEach((text) => {
-          const td = document.createElement("td");
-          td.style.border = "1px solid black";
-          td.style.padding = "10px";
-          td.textContent = text;
-          tr.appendChild(td);
-        });
-        tbody.appendChild(tr);
-      });
-      table.appendChild(tbody);
-
-      // Append the table to the neighboursTable
-      neighboursTable.appendChild(table);
-    };
-
     const graph = ForceGraph(
       {
         nodes,
@@ -100,9 +36,8 @@ export async function createForceGraph(wikiId) {
         nodeGroup: (d) => (d.sentiment > 0 ? "positive" : "negative"),
         nodeTitle: (d) => `${d.title}\nSentiment: ${d.sentiment}`,
         linkStrokeWidth: (l) => l.thickness,
-        width: 800,
-        height: 600,
-        onClick: onClick, // Pass the click handler
+        width: window.innerWidth - 20,
+        height: window.innerHeight - 20,
       }
     );
 
@@ -120,7 +55,7 @@ function ForceGraph({ nodes, links }, options = {}) {
     nodeGroup,
     nodeGroups,
     nodeTitle,
-    nodeFill = "currentColor",
+    nodeFill,
     nodeStroke = "#fff",
     nodeStrokeWidth = 1.5,
     nodeStrokeOpacity = 1,
@@ -134,10 +69,9 @@ function ForceGraph({ nodes, links }, options = {}) {
     linkStrokeLinecap = "round",
     linkStrength,
     colors = d3.schemeTableau10,
-    width = 640,
-    height = 400,
+    width,
+    height,
     invalidation,
-    onClick, // Add onClick option
   } = options;
 
   const N = d3.map(nodes, nodeId).map(intern);
@@ -165,6 +99,12 @@ function ForceGraph({ nodes, links }, options = {}) {
 
   if (G && nodeGroups === undefined) nodeGroups = d3.sort(G);
 
+  const sentimentColorScale = d3
+    .scaleLinear()
+    .domain([-1, 1])
+    .interpolate(d3.interpolateRgb)
+    .range(["red", "green"]);
+
   const color = nodeGroup == null ? null : d3.scaleOrdinal(nodeGroups, colors);
 
   const forceNode = d3.forceManyBody();
@@ -179,12 +119,15 @@ function ForceGraph({ nodes, links }, options = {}) {
     .force("center", d3.forceCenter())
     .on("tick", ticked);
 
+  console.log(width, height); // Debugging line
+
   const svg = d3
     .create("svg")
-    .attr("width", "100%")
-    .attr("height", "100%")
+    .attr("width", width)
+    .attr("height", height)
     .attr("viewBox", [-width / 2, -height / 2, width, height])
-    .attr("style", "max-width: 100%; height: auto;");
+    .attr("style", "max-width: 100%; height: auto;")
+    .on("click", svgClickHandler);
 
   const link = svg
     .append("g")
@@ -209,14 +152,14 @@ function ForceGraph({ nodes, links }, options = {}) {
     .data(nodes)
     .join("circle")
     .attr("r", nodeRadius)
+    .attr("fill", (d) => sentimentColorScale(d.sentiment))
     .call(drag(simulation))
-    .on("mouseover", handleMouseOver) // Add mouseover event
-    .on("mouseout", handleMouseOut) // Add mouseout event
-    .on("click", onClick); // Add click event listener
+    .on("mouseover", handleMouseOver)
+    .on("mouseout", handleMouseOut)
+    .on("click", handleOnClick);
 
   if (W) link.attr("stroke-width", ({ index: i }) => W[i]);
   if (L) link.attr("stroke", ({ index: i }) => L[i]);
-  if (G) node.attr("fill", ({ index: i }) => color(G[i]));
   if (T) node.append("title").text(({ index: i }) => T[i]);
   if (invalidation != null) invalidation.then(() => simulation.stop());
 
@@ -270,10 +213,6 @@ function ForceGraph({ nodes, links }, options = {}) {
     );
     neighbourNodes.push(d);
 
-    node.attr("fill", (n) =>
-      neighbourNodes.includes(n) ? "black" : color(G[n.index])
-    );
-
     tooltip.style("display", "block");
     tooltip
       .html(`ID: ${d.id}<br>Name: ${d.title}<br>Sentiment: ${d.sentiment}`)
@@ -283,7 +222,91 @@ function ForceGraph({ nodes, links }, options = {}) {
 
   function handleMouseOut() {
     d3.select("#tooltip").style("display", "none");
-    node.attr("fill", (d) => color(G[d.index]));
+  }
+
+  function svgClickHandler(event) {
+    if (event.target === this) {
+      node.attr("fill", (d) => sentimentColorScale(d.sentiment));
+    }
+  }
+
+  function handleOnClick(event, d) {
+    const infoBox = document.getElementById("node-info");
+    infoBox.innerHTML = `ID: ${d.id}<br>Name: ${d.title}<br>Sentiment: ${d.sentiment}`;
+    const neighboursTable = document.getElementById("neighbours");
+    const neighbours = links.filter((l) => l.source === d || l.target === d);
+    const neighbourNodes = neighbours.map((l) =>
+      l.source === d ? l.target : l.source
+    );
+
+    node.attr("fill", (n) =>
+      n === d
+        ? "white"
+        : neighbourNodes.includes(n)
+        ? "black"
+        : sentimentColorScale(n.sentiment)
+    );
+
+    const neighbourNodesWithWeights = neighbourNodes.map((n) => ({
+      title: n.title,
+      sentiment: n.sentiment,
+      weight: links.find(
+        (l) =>
+          (l.source === d && l.target === n) ||
+          (l.source === n && l.target === d)
+      ).weight,
+    }));
+
+    const neighbourNodesWithWeightsSorted = neighbourNodesWithWeights.sort(
+      (a, b) => b.weight - a.weight
+    );
+
+    // Clear the existing content
+    neighboursTable.innerHTML = "";
+
+    // Create and append the heading
+    const heading = document.createElement("h2");
+    heading.textContent = `Neighbours of the node ${d.title}`;
+    neighboursTable.appendChild(heading);
+
+    // Create the table
+    const table = document.createElement("table");
+    table.style.width = "100%";
+
+    // Create the table header
+    const thead = document.createElement("thead");
+    const headerRow = document.createElement("tr");
+    ["Name", "Sentiment", "Weight"].forEach((text) => {
+      const th = document.createElement("th");
+      th.style.border = "1px solid black";
+      th.style.padding = "10px";
+      th.style.backgroundColor = "#f2f2f2";
+      th.style.textAlign = "left";
+      th.style.fontWeight = "bold";
+      th.textContent = text;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    // Create the table body
+    const tbody = document.createElement("tbody");
+    tbody.id = "neighbours-table";
+    neighbourNodesWithWeightsSorted.forEach((n) => {
+      const tr = document.createElement("tr");
+      [n.title, n.sentiment, n.weight].forEach((text) => {
+        const td = document.createElement("td");
+        td.style.border = "1px solid black";
+        td.style.padding = "10px";
+        td.textContent = text;
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+
+    // Append the table to the neighboursTable
+    neighboursTable.appendChild(table);
   }
 
   return Object.assign(svg.node(), { scales: { color } });
