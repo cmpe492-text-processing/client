@@ -237,9 +237,23 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
 ```js
 import { createForceGraph } from "./components/graph.js";
 
+function enableZoomAndPanGraph() {
+  const svg = d3.select("#graph svg");
+
+  const gElementsInSVG = svg.selectAll("g");
+  const zoom = d3
+    .zoom()
+    .scaleExtent([0.5, 8])
+    .on("zoom", (event) => {
+      gElementsInSVG.attr("transform", event.transform);
+    });
+
+  svg.call(zoom);
+}
+
 const graphContainer = document.getElementById("graph");
 
-/* 
+/*
 {
                             nodes: [
                                 {
@@ -261,6 +275,7 @@ const graphContainer = document.getElementById("graph");
 createForceGraph(wiki_id)
   .then((graph) => {
     graphContainer.appendChild(graph);
+    enableZoomAndPanGraph();
   })
   .catch((error) => {
     console.error("Error fetching graph data:", error);
