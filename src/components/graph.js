@@ -1,6 +1,6 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@6/+esm";
 
-export async function createForceGraph(wikiId, onClick) {
+export async function createForceGraph(wikiId) {
   try {
     const response = await fetch(
       `https://project-x-back-a4ab947e69c6.herokuapp.com/graph?id=${wikiId}`
@@ -25,6 +25,70 @@ export async function createForceGraph(wikiId, onClick) {
       thickness: +d.thickness,
       weight: +d.weight,
     }));
+
+    const onClick = (event, d) => {
+      const infoBox = document.getElementById("node-info");
+      infoBox.innerHTML = `ID: ${d.id}<br>Name: ${d.title}<br>Sentiment: ${d.sentiment}`;
+      const neighboursTable = document.getElementById("neighbours");
+      const neighbours = links.filter(
+        (l) => l.source === d.id || l.target === d.id
+      );
+      const neighbourNodesWithWeights = neighbours.map((l) => {
+        const neighbour = l.source === d.id ? l.target : l.source;
+        return { ...nodes.find((n) => n.id === neighbour), weight: l.weight };
+      });
+
+      const neighbourNodesWithWeightsSorted = neighbourNodesWithWeights.sort(
+        (a, b) => b.weight - a.weight
+      );
+
+      // Clear the existing content
+      neighboursTable.innerHTML = "";
+
+      // Create and append the heading
+      const heading = document.createElement("h2");
+      heading.textContent = `Neighbours of the node ${d.title}`;
+      neighboursTable.appendChild(heading);
+
+      // Create the table
+      const table = document.createElement("table");
+      table.style.width = "100%";
+
+      // Create the table header
+      const thead = document.createElement("thead");
+      const headerRow = document.createElement("tr");
+      ["Name", "Sentiment", "Weight"].forEach((text) => {
+        const th = document.createElement("th");
+        th.style.border = "1px solid black";
+        th.style.padding = "10px";
+        th.style.backgroundColor = "#f2f2f2";
+        th.style.textAlign = "left";
+        th.style.fontWeight = "bold";
+        th.textContent = text;
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
+
+      // Create the table body
+      const tbody = document.createElement("tbody");
+      tbody.id = "neighbours-table";
+      neighbourNodesWithWeightsSorted.forEach((n) => {
+        const tr = document.createElement("tr");
+        [n.title, n.sentiment, n.weight].forEach((text) => {
+          const td = document.createElement("td");
+          td.style.border = "1px solid black";
+          td.style.padding = "10px";
+          td.textContent = text;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+
+      // Append the table to the neighboursTable
+      neighboursTable.appendChild(table);
+    };
 
     const graph = ForceGraph(
       {
@@ -117,10 +181,10 @@ function ForceGraph({ nodes, links }, options = {}) {
 
   const svg = d3
     .create("svg")
-    .attr("width", width)
-    .attr("height", height)
+    .attr("width", "100%")
+    .attr("height", "100%")
     .attr("viewBox", [-width / 2, -height / 2, width, height])
-    .attr("style", "max-width: 100%; height: auto; height: intrinsic;");
+    .attr("style", "max-width: 100%; height: auto;");
 
   const link = svg
     .append("g")
@@ -200,6 +264,16 @@ function ForceGraph({ nodes, links }, options = {}) {
   // Add mouseover and mouseout event handlers
   function handleMouseOver(event, d) {
     const tooltip = d3.select("#tooltip");
+    const neighbours = links.filter((l) => l.source === d || l.target === d);
+    const neighbourNodes = neighbours.map((l) =>
+      l.source === d ? l.target : l.source
+    );
+    neighbourNodes.push(d);
+
+    node.attr("fill", (n) =>
+      neighbourNodes.includes(n) ? "black" : color(G[n.index])
+    );
+
     tooltip.style("display", "block");
     tooltip
       .html(`ID: ${d.id}<br>Name: ${d.title}<br>Sentiment: ${d.sentiment}`)
@@ -209,6 +283,7 @@ function ForceGraph({ nodes, links }, options = {}) {
 
   function handleMouseOut() {
     d3.select("#tooltip").style("display", "none");
+    node.attr("fill", (d) => color(G[d.index]));
   }
 
   return Object.assign(svg.node(), { scales: { color } });

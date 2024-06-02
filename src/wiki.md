@@ -29,7 +29,7 @@ sidebar: false
 </style>
 ```
 
-<div class="grid grid-cols-12">
+<div class="">
   <div class="card">
     <h2>Most Occurred Entities Table</h2>
     <div id="tableContainer"></div>
@@ -43,6 +43,9 @@ sidebar: false
         <h3>Node Information</h3>
         <p id="node-info"></p>
     </div>
+  </div>
+  <div class="card">
+    <div id="neighbours"></div>
   </div>
   <div class="card">
     <h2>Sentiment Occurrence Count</h2>
@@ -255,12 +258,7 @@ const graphContainer = document.getElementById("graph");
                         }
  */
 
-function handleClick(event, node) {
-  const infoBox = document.getElementById("node-info");
-  infoBox.innerHTML = `ID: ${node.id}<br>Name: ${node.title}<br>Sentiment: ${node.sentiment}`;
-}
-
-createForceGraph(wiki_id, handleClick)
+createForceGraph(wiki_id)
   .then((graph) => {
     graphContainer.appendChild(graph);
   })
