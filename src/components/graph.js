@@ -17,6 +17,7 @@ export async function createForceGraph(wikiId) {
       id: d.id,
       title: d.name,
       sentiment: +d.sentiment,
+      size: +d.size,
     }));
 
     const links = data.links.map((d) => ({
@@ -30,6 +31,7 @@ export async function createForceGraph(wikiId) {
       {
         nodes,
         links,
+        wikiId,
       },
       {
         nodeId: (d) => d.id,
@@ -49,7 +51,7 @@ export async function createForceGraph(wikiId) {
 }
 
 // Define the ForceGraph function
-function ForceGraph({ nodes, links }, options = {}) {
+function ForceGraph({ nodes, links , wikiId }, options = {}) {
   let {
     nodeId = (d) => d.id,
     nodeGroup,
@@ -77,6 +79,7 @@ function ForceGraph({ nodes, links }, options = {}) {
   const N = d3.map(nodes, nodeId).map(intern);
   const G = nodeGroup == null ? null : d3.map(nodes, nodeGroup).map(intern);
   const T = nodeTitle == null ? null : d3.map(nodes, nodeTitle);
+  const SI = typeof nodeRadius !== "function" ? null : d3.map(nodes, nodeRadius);
   const LS = d3.map(links, linkSource).map(intern);
   const LT = d3.map(links, linkTarget).map(intern);
   const W =
@@ -89,6 +92,7 @@ function ForceGraph({ nodes, links }, options = {}) {
     id: N[i],
     title: nodes[i].title,
     sentiment: nodes[i].sentiment,
+    radius: nodes[i].size,
   }));
   links = d3.map(links, (_, i) => ({
     source: LS[i],
@@ -151,7 +155,7 @@ function ForceGraph({ nodes, links }, options = {}) {
     .selectAll("circle")
     .data(nodes)
     .join("circle")
-    .attr("r", nodeRadius)
+    .attr("r", (d) => d.radius)
     .attr("fill", (d) => sentimentColorScale(d.sentiment))
     .call(drag(simulation))
     .on("mouseover", handleMouseOver)
@@ -177,6 +181,12 @@ function ForceGraph({ nodes, links }, options = {}) {
       .attr("y2", (d) => d.target.y);
 
     node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
+
+    const centerNode = nodes.find((n) => n.id === wikiId);
+    if (centerNode) {
+      centerNode.fx = width / 2;
+      centerNode.fy = height / 2;
+    }
   }
 
   function drag(simulation) {
@@ -250,6 +260,11 @@ function ForceGraph({ nodes, links }, options = {}) {
     const neighbourNodesWithWeights = neighbourNodes.map((n) => ({
       title: n.title,
       sentiment: n.sentiment,
+      thickness: links.find(
+        (l) =>
+          (l.source === d && l.target === n) ||
+          (l.source === n && l.target === d)
+      ).thickness,
       weight: links.find(
         (l) =>
           (l.source === d && l.target === n) ||
@@ -258,7 +273,7 @@ function ForceGraph({ nodes, links }, options = {}) {
     }));
 
     const neighbourNodesWithWeightsSorted = neighbourNodesWithWeights.sort(
-      (a, b) => b.weight - a.weight
+      (a, b) => b.thickness - a.thickness || b.weight - a.weight
     );
 
     // Clear the existing content
@@ -276,7 +291,7 @@ function ForceGraph({ nodes, links }, options = {}) {
     // Create the table header
     const thead = document.createElement("thead");
     const headerRow = document.createElement("tr");
-    ["Name", "Sentiment", "Weight"].forEach((text) => {
+    ["Name", "Sentiment", "Relatedness"].forEach((text) => {
       const th = document.createElement("th");
       th.style.border = "1px solid black";
       th.style.padding = "10px";
