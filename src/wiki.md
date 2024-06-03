@@ -161,106 +161,18 @@ const histogram_2 = document.getElementById("histogram_2");
 const urlParams = new URLSearchParams(window.location.search);
 const wiki_id = urlParams.get("id");
 
-async function fetchHumanOccurrenceHistogramData(wikiId) {
-  const response = await fetch(
-    `https://project-x-back-a4ab947e69c6.herokuapp.com/histogram/occurrence?id=${wikiId}`
-  );
-  return response.json();
-}
-
-async function fetchMostOccurredEntities(wikiId, page_number = 1) {
-  const response = await fetch(
-    `https://project-x-back-a4ab947e69c6.herokuapp.com/most-occurred-entities?id=${wikiId}&page_number=${page_number}`
-  );
-  return response.json();
-}
-
 async function fetchFeatureExtractionJSON(wikiId) {
   const response = await fetch(
-    `https://project-x-back-a4ab947e69c6.herokuapp.com/histogram/co-occurrence?id=${wikiId}`
+    `https://project-x-back-a4ab947e69c6.herokuapp.com/general-info?id=${wikiId}`
   );
   return response.json();
-}
-
-function updatePageButtons() {
-  const prevPageButton = document.getElementById("prev-page");
-  const nextPageButton = document.getElementById("next-page");
-  const currentPageSpan = document.getElementById("current-page");
-
-  prevPageButton.disabled = currentPage === 1;
-  prevPageButton.style.color = currentPage === 1 ? "black" : "blue";
-  nextPageButton.disabled = currentPage === maxPage;
-  nextPageButton.style.color = currentPage === maxPage ? "black" : "blue";
-  currentPageSpan.textContent = currentPage;
 }
 
 if (!wiki_id) {
   histogram.textContent = "No wiki ID provided, please provide a wiki id";
 }
 
-let currentPage = 1;
-let maxPage = 2;
-document.getElementById("prev-page").addEventListener("click", () => {
-  currentPage--;
-  updatePageButtons();
-  upsertTable();
-});
-
-document.getElementById("next-page").addEventListener("click", () => {
-  currentPage++;
-  updatePageButtons();
-  upsertTable();
-});
-
 document.title = `Wiki ID: ${wiki_id}`;
-
-let rowsMap = new Map();
-let rowsMapInfo = new Map();
-
-function upsertTable() {
-  fetchMostOccurredEntities(wiki_id, currentPage).then((data) => {
-    const most_occurred_entities = data.most_occurred_entities;
-    const tableContainer = document.getElementById("tableContainer");
-    maxPage = data.max_page;
-    let table = tableContainer.querySelector("table");
-
-    if (!table) {
-      // Table doesn't exist, create it
-      const result = createTable(most_occurred_entities);
-      table = result.table;
-      rowsMap = result.rowsMap;
-      rowsMapInfo = result.rowsMapInfo;
-      tableContainer.appendChild(table);
-    } else {
-      // Table exists, update it
-
-      tableContainer.removeChild(table);
-      const result = createTable(most_occurred_entities);
-      table = result.table;
-      rowsMap = result.rowsMap;
-      rowsMapInfo = result.rowsMapInfo;
-      tableContainer.appendChild(table);
-    }
-
-    updateDescriptions(rowsMap);
-    updateInstanceOf(rowsMapInfo);
-  });
-}
-
-function updateRows(data, rowsMap, rowsMapInfo) {
-  data.forEach((item) => {
-    const cellDescription = rowsMap.get(item.wiki_id);
-    const cellInstanceOf = rowsMapInfo.get(item.wiki_id);
-
-    if (cellDescription && cellInstanceOf) {
-      cellDescription.textContent = item.description || "Loading...";
-      cellInstanceOf.textContent = item.instanceOf || "Loading...";
-    }
-  });
-}
-
-updatePageButtons();
-upsertTable();
 
 fetchFeatureExtractionJSON(wiki_id).then((data) => {
   const most_occurred_entities = data.most_occurred_entities;
@@ -271,6 +183,12 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
   const positives = main_entity
     .map((d) => d?.positive)
     .filter((d) => d?.positive != 0);
+
+  const tableContainer = document.getElementById("tableContainer");
+  const { table, rowsMap, rowsMapInfo } = createTable(most_occurred_entities);
+  updateDescriptions(rowsMap);
+  updateInstanceOf(rowsMapInfo);
+  tableContainer.appendChild(table);
 
   const positiveBinGenerator = d3.bin().domain([0.001, 1]).thresholds(20);
   const negativeBinGenerator = d3.bin().domain([-1, -0.001]).thresholds(20);
@@ -307,6 +225,9 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
     height: 600,
   });
   document.getElementById("histogram_2").appendChild(chart);
+  most_occurred_entities.forEach((entity) => {
+    data = getWikiInfo(entity.wiki_id).then((data) => {});
+  });
 });
 ```
 
