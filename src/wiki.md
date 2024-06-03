@@ -26,6 +26,10 @@ sidebar: false
     padding: 10px;
     width: 300px;
   }
+
+  #tableContainer form table thead tr th {
+    pointer-events: none;
+  }
 </style>
 ```
 
