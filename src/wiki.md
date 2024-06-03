@@ -187,17 +187,6 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
     updateTableData(table);
   });
 
-  const rows = table.querySelectorAll("tbody tr td input");
-  rows.forEach((row) => {
-    row.parentNode.parentNode.style.backgroundColor = "white";
-    row.addEventListener("click", () => {
-      row.parentNode.parentNode.style.backgroundColor =
-        row.parentNode.parentNode.style.backgroundColor == "white"
-          ? "aliceblue"
-          : "white";
-    });
-  });
-
   const allSelect = table.querySelector("thead tr th input");
   allSelect.style.display = "none";
 
