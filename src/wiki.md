@@ -38,7 +38,7 @@ sidebar: false
 ```
 
 <div class="">
-  <div class="card not-active">
+  <div class="not-active">
   <div id="tableContainer"></div>
   </div>
   <div class="card">
@@ -52,7 +52,7 @@ sidebar: false
         <p id="node-info"></p>
     </div>
   </div>
-  <div class="card not-active">
+  <div class="not-active">
     <div id="neighbours"></div>
   </div>
   <div class="not-active">
@@ -152,6 +152,7 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
 
   const tableContainer = document.getElementById("tableContainer");
   tableContainer.parentNode.classList.remove("not-active");
+  tableContainer.parentNode.classList.add("card");
 
   tableContainer.innerHTML = "";
   const table = Inputs.table(tableData, {

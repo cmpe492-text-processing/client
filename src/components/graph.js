@@ -250,6 +250,7 @@ function ForceGraph({ nodes, links, wikiId }, options = {}) {
     const neighboursTable = document.getElementById("neighbours");
 
     neighboursTable.parentNode.classList.remove("not-active");
+    neighboursTable.parentNode.classList.add("card");
     const neighbours = links.filter((l) => l.source === d || l.target === d);
     const neighbourNodes = neighbours.map((l) =>
       l.source === d ? l.target : l.source
