@@ -157,7 +157,7 @@ document
           entities.forEach((entity) => {
             textDiv.innerHTML += text.slice(i, entity.begin);
             const link = document.createElement("a");
-            link.href = `https://hocamsimdi.netlify.app/wiki?id=${entity.wiki_id}`;
+            link.href = `http://hocamsimdi.com.tr/wiki?id=${entity.wiki_id}`;
             link.textContent = entity.mention;
             textDiv.appendChild(link);
             i = entity.end;
