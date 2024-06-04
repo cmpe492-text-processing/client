@@ -30,11 +30,17 @@ sidebar: false
   #tableContainer form table thead tr th {
     pointer-events: none;
   }
+
+  not-active {
+    display: none;
+  }
 </style>
 ```
 
 <div class="">
+  <div class="not-active">
   <div id="tableContainer"></div>
+  </div>
   <div class="card">
     <h2>Graph</h2>
     <div id="graph">
@@ -42,14 +48,14 @@ sidebar: false
     </div>
     <div id="info-box">
         <h3>Node Information</h3>
+        <h6>Click a node to show neighbours</h6>
         <p id="node-info"></p>
     </div>
   </div>
-  <div class="card">
+  <div class="not-active">
     <div id="neighbours"></div>
   </div>
-  <div class="card">
-    <h2>Sentiment Occurrence Count</h2>
+  <div class="not-active">
     <div id="histogram_2"></div>
   </div>
 </div>
@@ -145,6 +151,8 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
   });
 
   const tableContainer = document.getElementById("tableContainer");
+  tableContainer.parentNode.classList.remove("not-active");
+
   tableContainer.innerHTML = "";
   const table = Inputs.table(tableData, {
     columns: [
@@ -173,6 +181,7 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
       instance_of: 150,
       wiki_id: 0,
     },
+    rows: 20,
   });
 
   tableContainer.appendChild(table);
@@ -238,7 +247,13 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
     width: 1200,
     height: 600,
   });
-  document.getElementById("histogram_2").appendChild(chart);
+  const heading = document.createElement("h2");
+  heading.textContent = `Occurrence count histogram`;
+  histogram_2.parentNode.classList.remove("not-active");
+  histogram_2.parentNode.classList.add("card");
+  histogram_2.innerHTML = "";
+  histogram_2.appendChild(heading);
+  histogram_2.appendChild(chart);
 });
 ```
 

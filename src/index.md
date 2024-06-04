@@ -65,15 +65,16 @@ sidebar: false
 <div id="part-of-speech" class=`svg-container display-none`></div>
 </div>
 <br>
-
+<div class="results-sentiment-container">
 <div id="results-sentiment"></div>
-
+</div>
 <br/>
 
 ```js
 function sentimentChart(data, { width }) {
   return Plot.plot({
     width: width,
+    minWidth: 800,
     height: 500,
     marginTop: 20,
     marginLeft: 50,
@@ -145,7 +146,7 @@ document
             .select("#part-of-speech")
             .node()
             .getBoundingClientRect().width;
-          const chartWidth = containerWidth * 0.5; // 50% of the container's width
+          const chartWidth = containerWidth < 800 ? 500 : containerWidth * 0.5;
 
           const chart = sentimentChart(plotData, { width: chartWidth });
 

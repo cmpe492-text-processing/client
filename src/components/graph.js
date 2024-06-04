@@ -1,4 +1,5 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@6/+esm";
+import * as Inputs from "npm:@observablehq/inputs";
 
 export async function createForceGraph(wikiId) {
   try {
@@ -247,6 +248,8 @@ function ForceGraph({ nodes, links, wikiId }, options = {}) {
     const infoBox = document.getElementById("node-info");
     infoBox.innerHTML = `ID: ${d.id}<br>Name: ${d.title}<br>Sentiment: ${d.sentiment}`;
     const neighboursTable = document.getElementById("neighbours");
+
+    neighboursTable.parentNode.classList.remove("not-active");
     const neighbours = links.filter((l) => l.source === d || l.target === d);
     const neighbourNodes = neighbours.map((l) =>
       l.source === d ? l.target : l.source
@@ -287,43 +290,25 @@ function ForceGraph({ nodes, links, wikiId }, options = {}) {
     heading.textContent = `Neighbours of the node ${d.title}`;
     neighboursTable.appendChild(heading);
 
-    // Create the table
-    const table = document.createElement("table");
-    table.style.width = "100%";
-
-    // Create the table header
-    const thead = document.createElement("thead");
-    const headerRow = document.createElement("tr");
-    ["Name", "Sentiment", "Relatedness"].forEach((text) => {
-      const th = document.createElement("th");
-      th.style.border = "1px solid black";
-      th.style.padding = "10px";
-      th.style.backgroundColor = "#f2f2f2";
-      th.style.textAlign = "left";
-      th.style.fontWeight = "bold";
-      th.textContent = text;
-      headerRow.appendChild(th);
+    const tableData = neighbourNodesWithWeightsSorted.map((node) => {
+      return {
+        name: node.title,
+        sentiment: node.sentiment,
+        relatedness: node.weight,
+      };
     });
-    thead.appendChild(headerRow);
-    table.appendChild(thead);
 
-    // Create the table body
-    const tbody = document.createElement("tbody");
-    tbody.id = "neighbours-table";
-    neighbourNodesWithWeightsSorted.forEach((n) => {
-      const tr = document.createElement("tr");
-      [n.title, n.sentiment, n.weight].forEach((text) => {
-        const td = document.createElement("td");
-        td.style.border = "1px solid black";
-        td.style.padding = "10px";
-        td.textContent = text;
-        tr.appendChild(td);
-      });
-      tbody.appendChild(tr);
+    const table = Inputs.table(tableData, {
+      columns: ["name", "sentiment", "relatedness"],
+      header: {
+        name: "Name",
+        sentiment: "Sentiment",
+        relatedness: "Relatedness",
+      },
+      rows: 20,
+      search: true,
     });
-    table.appendChild(tbody);
 
-    // Append the table to the neighboursTable
     neighboursTable.appendChild(table);
   }
 
