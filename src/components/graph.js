@@ -51,7 +51,7 @@ export async function createForceGraph(wikiId) {
 }
 
 // Define the ForceGraph function
-function ForceGraph({ nodes, links , wikiId }, options = {}) {
+function ForceGraph({ nodes, links, wikiId }, options = {}) {
   let {
     nodeId = (d) => d.id,
     nodeGroup,
@@ -79,7 +79,8 @@ function ForceGraph({ nodes, links , wikiId }, options = {}) {
   const N = d3.map(nodes, nodeId).map(intern);
   const G = nodeGroup == null ? null : d3.map(nodes, nodeGroup).map(intern);
   const T = nodeTitle == null ? null : d3.map(nodes, nodeTitle);
-  const SI = typeof nodeRadius !== "function" ? null : d3.map(nodes, nodeRadius);
+  const SI =
+    typeof nodeRadius !== "function" ? null : d3.map(nodes, nodeRadius);
   const LS = d3.map(links, linkSource).map(intern);
   const LT = d3.map(links, linkTarget).map(intern);
   const W =
@@ -129,6 +130,8 @@ function ForceGraph({ nodes, links , wikiId }, options = {}) {
     .create("svg")
     .attr("width", width)
     .attr("height", height)
+    .attr("min-width", 800)
+    .attr("min-height", 800)
     .attr("viewBox", [-width / 2, -height / 2, width, height])
     .attr("style", "max-width: 100%; height: auto;")
     .on("click", svgClickHandler);

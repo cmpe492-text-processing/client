@@ -26,14 +26,15 @@ sidebar: false
     padding: 10px;
     width: 300px;
   }
+
+  #tableContainer form table thead tr th {
+    pointer-events: none;
+  }
 </style>
 ```
 
 <div class="">
-  <div class="card">
-    <h2>Most Occurred Entities Table</h2>
-    <div id="tableContainer"></div>
-  </div>
+  <div id="tableContainer"></div>
   <div class="card">
     <h2>Graph</h2>
     <div id="graph">
@@ -52,72 +53,6 @@ sidebar: false
     <div id="histogram_2"></div>
   </div>
 </div>
-
-```js
-function createTable(data) {
-  const table = document.createElement("table");
-  const thead = document.createElement("thead");
-  const tbody = document.createElement("tbody");
-
-  table.style.maxWidth = "100%";
-
-  const headerRow = document.createElement("tr");
-  const headers = ["Occurrence Count", "Name", "Description", "Instance Of"];
-  headers.forEach((headerText) => {
-    const th = document.createElement("th");
-    th.textContent = headerText;
-    th.style.border = "1px solid black";
-    th.style.padding = "10px";
-    th.style.backgroundColor = "#f2f2f2";
-    th.style.textAlign = "left";
-    th.style.fontWeight = "bold";
-    headerRow.appendChild(th);
-  });
-  thead.appendChild(headerRow);
-  table.appendChild(thead);
-
-  // Map to store row elements by wiki_id for later updating
-  const rowsMap = new Map();
-  const rowsMapInfo = new Map();
-
-  data.forEach((item) => {
-    const row = document.createElement("tr");
-
-    const cellCount = document.createElement("td");
-    cellCount.textContent = item.n;
-    cellCount.style.border = "1px solid black";
-    cellCount.style.padding = "10px";
-    row.appendChild(cellCount);
-
-    const cellName = document.createElement("td");
-    cellName.textContent = item.name;
-    cellName.style.border = "1px solid black";
-    cellName.style.padding = "10px";
-    row.appendChild(cellName);
-
-    const cellDescription = document.createElement("td");
-    cellDescription.textContent = "Loading..."; // Placeholder text
-    cellDescription.style.border = "1px solid black";
-    cellDescription.style.padding = "10px";
-    row.appendChild(cellDescription);
-
-    const cellInstanceOf = document.createElement("td");
-    cellInstanceOf.textContent = "Loading..."; // Placeholder text
-    cellInstanceOf.style.border = "1px solid black";
-    cellInstanceOf.style.padding = "10px";
-    row.appendChild(cellInstanceOf);
-
-    tbody.appendChild(row);
-
-    // Store the description cell in the map with wiki_id as the key
-    rowsMap.set(item.wiki_id, cellDescription);
-    rowsMapInfo.set(item.wiki_id, cellInstanceOf);
-  });
-
-  table.appendChild(tbody);
-  return { table, rowsMap, rowsMapInfo };
-}
-```
 
 ```js
 function getWikiInfo(wiki_id) {
@@ -156,16 +91,9 @@ const histogram_2 = document.getElementById("histogram_2");
 const urlParams = new URLSearchParams(window.location.search);
 const wiki_id = urlParams.get("id");
 
-async function fetchHumanOccurrenceHistogramData(wikiId) {
-  const response = await fetch(
-    `https://project-x-back-a4ab947e69c6.herokuapp.com/histogram/occurrence?id=${wikiId}`
-  );
-  return response.json();
-}
-
 async function fetchFeatureExtractionJSON(wikiId) {
   const response = await fetch(
-    `https://project-x-back-a4ab947e69c6.herokuapp.com/histogram/co-occurrence?id=${wikiId}`
+    `https://project-x-back-a4ab947e69c6.herokuapp.com/general-info?id=${wikiId}`
   );
   return response.json();
 }
@@ -176,8 +104,98 @@ if (!wiki_id) {
 
 document.title = `Wiki ID: ${wiki_id}`;
 
+function updateTableData(table) {
+  const tBody = table.querySelector("tbody");
+  const rows = tBody.querySelectorAll("tr");
+
+  Array.from(rows).forEach((row) => {
+    const nameCell = row.querySelector("td:last-child");
+    const instanceOfCell = row.querySelector("td:nth-last-child(2)");
+    const descriptionCell = row.querySelector("td:nth-last-child(3)");
+
+    if (
+      nameCell &&
+      descriptionCell.textContent == "Loading..." &&
+      instanceOfCell.textContent == "Loading..." &&
+      !row.hasAttribute("data-loading")
+    ) {
+      const wiki_id = nameCell.textContent;
+      row.setAttribute("data-loading", "true"); // Add data attribute
+      getWikiInfo(wiki_id).then((data) => {
+        descriptionCell.textContent =
+          data.description || "No description available";
+        instanceOfCell.textContent =
+          data.instance_of || "No instance of available";
+        row.removeAttribute("data-loading"); // Remove data attribute
+      });
+    }
+  });
+}
+
 fetchFeatureExtractionJSON(wiki_id).then((data) => {
   const most_occurred_entities = data.most_occurred_entities;
+  const tableData = most_occurred_entities.map((entity) => {
+    return {
+      name: entity.name,
+      occurrence_count: entity.n,
+      description: "Loading...",
+      instance_of: "Loading...",
+      wiki_id: entity.wiki_id,
+    };
+  });
+
+  const tableContainer = document.getElementById("tableContainer");
+  tableContainer.innerHTML = "";
+  const table = Inputs.table(tableData, {
+    columns: [
+      "occurrence_count",
+      "name",
+      "description",
+      "instance_of",
+      "wiki_id",
+    ],
+    header: {
+      occurrence_count: "Count",
+      name: "Entity Name",
+      description: "Description",
+      instance_of: "Instance Of",
+      wiki_id: "Wiki ID",
+    },
+    format: {
+      wiki_id: (value) => {
+        return value.toString();
+      },
+    },
+    width: {
+      occurrence_count: 30,
+      name: 100,
+      description: 200,
+      instance_of: 150,
+      wiki_id: 0,
+    },
+  });
+
+  tableContainer.appendChild(table);
+  const descriptionCells = table.querySelectorAll("tbody td:nth-last-child(3)");
+  const instanceOfCells = table.querySelectorAll("tbody td:nth-last-child(2)");
+  descriptionCells.forEach((cell) => {
+    cell.style.whiteSpace = "normal";
+    cell.style.overflow = "visible";
+  });
+  instanceOfCells.forEach((cell) => {
+    cell.style.whiteSpace = "normal";
+    cell.style.overflow = "visible";
+  });
+
+  table.addEventListener("scroll", () => {
+    updateTableData(table);
+  });
+
+  const allSelect = table.querySelector("thead tr th input");
+  allSelect.style.display = "none";
+
+  updateTableData(table);
+
   const main_entity = data.main_entity?.sentiments_extended;
   const negatives = main_entity
     .map((d) => -d?.negative)
@@ -185,12 +203,6 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
   const positives = main_entity
     .map((d) => d?.positive)
     .filter((d) => d?.positive != 0);
-
-  const tableContainer = document.getElementById("tableContainer");
-  const { table, rowsMap, rowsMapInfo } = createTable(most_occurred_entities);
-  updateDescriptions(rowsMap);
-  updateInstanceOf(rowsMapInfo);
-  tableContainer.appendChild(table);
 
   const positiveBinGenerator = d3.bin().domain([0.001, 1]).thresholds(20);
   const negativeBinGenerator = d3.bin().domain([-1, -0.001]).thresholds(20);
@@ -227,10 +239,6 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
     height: 600,
   });
   document.getElementById("histogram_2").appendChild(chart);
-
-  most_occurred_entities.forEach((entity) => {
-    data = getWikiInfo(entity.wiki_id).then((data) => {});
-  });
 });
 ```
 
