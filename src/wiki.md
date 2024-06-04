@@ -38,7 +38,7 @@ sidebar: false
 ```
 
 <div class="">
-  <div class="not-active">
+  <div class="card not-active">
   <div id="tableContainer"></div>
   </div>
   <div class="card">
@@ -46,13 +46,13 @@ sidebar: false
     <div id="graph">
       <div id="tooltip"></div>
     </div>
-    <div id="info-box">
+    <div id="info-box" class="card">
         <h3>Node Information</h3>
         <h6>Click a node to show neighbours</h6>
         <p id="node-info"></p>
     </div>
   </div>
-  <div class="not-active">
+  <div class="card not-active">
     <div id="neighbours"></div>
   </div>
   <div class="not-active">
