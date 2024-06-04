@@ -96,7 +96,7 @@ function enableZoomAndPan() {
 
   const zoom = d3
     .zoom()
-    .scaleExtent([0.5, 8]) // Limits for zoom scaling (0.5x to 8x)
+    .scaleExtent([0.1, 8]) // Limits for zoom scaling (0.5x to 8x)
     .on("zoom", (event) => {
       elements.attr("transform", event.transform); // Apply transformations to both 'g' and 'text' elements
     });
