@@ -332,19 +332,18 @@ function ForceGraph({ nodes, links, wikiId }, options = {}) {
         name: "Name",
         sentiment: "Sentiment",
         relatedness: "Relatedness",
-        wiki: "Wiki",
+        wiki: "Wiki"
       },
       format: {
         sentiment: (d) => d.toFixed(2),
         relatedness: (d) => d.toFixed(2),
-        wiki: (d) =>
-          htl.html`<a href="http://hocamsimdi.com.tr/wiki?id=${d}" target="_blank">${d}</a>`,
+        wiki: (d) => htl.html`<a href="http://hocamsimdi.com.tr/wiki?id=${d}" target="_blank">${d}</a>`
       },
       width: {
         name: 200,
         sentiment: 100,
         relatedness: 100,
-        wiki: 100,
+        wiki: 100
       },
       rows: 20,
       search: true,
