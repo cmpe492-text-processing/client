@@ -1,14 +1,20 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@6/+esm";
 import * as Inputs from "npm:@observablehq/inputs";
+import * as htl from "../.observablehq/cache/_npm/htl@0.3.1/_esm.js";
 
 export async function createForceGraph(wikiId) {
   try {
+
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 45000)
+
     const response = await fetch(
-      `https://project-x-back-a4ab947e69c6.herokuapp.com/graph?id=${wikiId}`
+      `https://project-x-back-a4ab947e69c6.herokuapp.com/graph?id=${wikiId}`,
+        { signal: controller.signal }
     );
     const data = await response.json();
 
-    console.log("Fetched data:", data); // Debugging line
+    console.log("Fetched data:", data);
 
     if (!data.nodes || !data.links) {
       throw new Error("Data format error: 'nodes' or 'links' is missing");
@@ -133,7 +139,7 @@ function ForceGraph({ nodes, links, wikiId }, options = {}) {
     .attr("height", height)
     .attr("min-width", 800)
     .attr("min-height", 800)
-    .attr("viewBox", [-width / 2, -height / 2, width, height])
+    .attr("viewBox", [-width / 2, -height, width, height])
     .attr("style", "max-width: 100%; height: auto;")
     .on("click", svgClickHandler);
 
@@ -246,11 +252,26 @@ function ForceGraph({ nodes, links, wikiId }, options = {}) {
 
   function handleOnClick(event, d) {
     const infoBox = document.getElementById("node-info");
-    infoBox.innerHTML = `ID: ${d.id}<br>Name: ${d.title}<br>Sentiment: ${d.sentiment}`;
+
+    infoBox.innerHTML = `
+        <br>
+        <p>
+        <strong>Wiki ID:</strong> ${d.id}<br>
+        <strong>Name:</strong> ${d.title}<br>
+        <strong>Sentiment:</strong> ${d.sentiment}<br>
+        </p>
+        <br>
+        <p><strong>Links</strong>
+        <ul>
+            <li><a href="http://hocamsimdi.com.tr/wiki?id=${d.id}" target="_blank">Wiki</a></li>
+            <li><a href="https://www.google.com/search?q=${d.title}" target="_blank">Google</a></li>
+            <li><a href="https://en.wikipedia.org/wiki/${d.title}" target="_blank">Wikipedia</a></li>
+        </ul>
+        </p>
+    `;
+
     const neighboursTable = document.getElementById("neighbours");
 
-    neighboursTable.parentNode.classList.remove("not-active");
-    neighboursTable.parentNode.classList.add("card");
     const neighbours = links.filter((l) => l.source === d || l.target === d);
     const neighbourNodes = neighbours.map((l) =>
       l.source === d ? l.target : l.source
@@ -265,6 +286,7 @@ function ForceGraph({ nodes, links, wikiId }, options = {}) {
     );
 
     const neighbourNodesWithWeights = neighbourNodes.map((n) => ({
+      id: n.id,
       title: n.title,
       sentiment: n.sentiment,
       thickness: links.find(
@@ -290,24 +312,40 @@ function ForceGraph({ nodes, links, wikiId }, options = {}) {
     const heading = document.createElement("h2");
     heading.textContent = `Neighbours of the node ${d.title}`;
     neighboursTable.appendChild(heading);
+    neighboursTable.appendChild(document.createElement("br"));
 
     const tableData = neighbourNodesWithWeightsSorted.map((node) => {
       return {
         name: node.title,
         sentiment: node.sentiment,
         relatedness: node.weight,
+        wiki: node.id
       };
     });
 
     const table = Inputs.table(tableData, {
-      columns: ["name", "sentiment", "relatedness"],
+      columns: ["name", "sentiment", "relatedness", "wiki"],
       header: {
         name: "Name",
         sentiment: "Sentiment",
         relatedness: "Relatedness",
+        wiki: "Wiki"
+      },
+      format: {
+        sentiment: (d) => d.toFixed(2),
+        relatedness: (d) => d.toFixed(2),
+        wiki: (d) => htl.html`<a href="http://hocamsimdi.com.tr/wiki?id=${d}" target="_blank">${d}</a>`
+      },
+      width: {
+        name: 200,
+        sentiment: 100,
+        relatedness: 100,
+        wiki: 100
       },
       rows: 20,
       search: true,
+
+
     });
 
     neighboursTable.appendChild(table);

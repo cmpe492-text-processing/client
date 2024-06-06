@@ -1,5 +1,4 @@
 ---
-title: "Project X"
 toc: false
 sidebar: false
 ---
@@ -34,8 +33,6 @@ sidebar: false
             height: 400px; /* Adjust height for smaller devices */
         }
     }
-
-
     .svg-container {
         max-width: 100%;
         height: 600px;    /* Sufficient height to display SVG */

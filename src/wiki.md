@@ -1,5 +1,5 @@
 ---
-title: Wiki Page
+title: Wiki
 toc: false
 sidebar: false
 ---
@@ -20,13 +20,6 @@ sidebar: false
     display: none;
   }
 
-  #info-box {
-    margin-top: 20px;
-    border: 1px solid black;
-    padding: 10px;
-    width: 300px;
-  }
-
   #tableContainer form table thead tr th {
     pointer-events: none;
   }
@@ -37,28 +30,38 @@ sidebar: false
 </style>
 ```
 
-<div class="">
-  <div class="not-active">
-  <div id="tableContainer"></div>
-  </div>
-  <div class="card">
-    <h2>Graph</h2>
-    <div id="graph">
-      <div id="tooltip"></div>
+<div id="main-heading" style="display: flex; justify-content: center; align-items: center; flex-direction: column">
+  <h1>Wiki: </h1>
+</div>
+
+
+<div class="grid grid-cols-3">
+    <div id="infobox" class="card grid-colspan-1 grid-rowspan-2">
+        <h2>Infobox</h2>
+    </div> 
+    <div id="tableContainer" class="card grid-colspan-2 grid-rowspan-2">
+        <h2>Co-occurrence Count Table</h2>
     </div>
-    <div id="info-box" class="card">
-        <h3>Node Information</h3>
-        <h6>Click a node to show neighbours</h6>
+    <div id="graph" class="card grid-colspan-2 grid-rowspan-3">
+        <h2>Graph</h2>
+        <div id="tooltip"></div>
+    </div>
+    <div id="info-box" class="card grid-colspan-1 grid-rowspan-1">
+        <h2>Current Node Info</h2>
         <p id="node-info"></p>
     </div>
-  </div>
-  <div class="not-active">
-    <div id="neighbours"></div>
-  </div>
-  <div class="not-active">
-    <div id="histogram_2"></div>
-  </div>
+    <div id="neighbours" class="card grid-colspan-1 grid-rowspan-2">
+        <h2>Neighbours Table</h2>
+    </div>
 </div>
+<div class="grid grid-cols-3">
+    <div id="sentiment-histogram" class="card grid-colspan-2 grid-rowspan-1">
+        <h2>Sentiment Histogram</h2>
+    </div>
+    <div class="not-active grid-colspan-1 grid-rowspan-1">
+    </div>    
+</div>
+  
 
 ```js
 function getWikiInfo(wiki_id) {
@@ -93,7 +96,7 @@ function updateInstanceOf(rowsMap) {
 ```js
 const base = document.getElementById("base");
 const histogram = document.getElementById("histogram");
-const histogram_2 = document.getElementById("histogram_2");
+const histogramContainer = document.getElementById("sentiment-histogram");
 const urlParams = new URLSearchParams(window.location.search);
 const wiki_id = urlParams.get("id");
 
@@ -104,11 +107,16 @@ async function fetchFeatureExtractionJSON(wikiId) {
   return response.json();
 }
 
-if (!wiki_id) {
-  histogram.textContent = "No wiki ID provided, please provide a wiki id";
-}
+async function getFirstParagraph(title) {
+    const url = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=extracts&exintro&explaintext&titles=${title}`;
+    const response = await fetch(url);
+    const data = await response.json();
 
-document.title = `Wiki ID: ${wiki_id}`;
+    const page = Object.values(data.query.pages)[0];
+    const description = page.extract ? page.extract.split('\n')[0] : 'No description available.';
+
+    return description;
+}
 
 function updateTableData(table) {
   const tBody = table.querySelector("tbody");
@@ -137,7 +145,9 @@ function updateTableData(table) {
     }
   });
 }
+```
 
+```js
 fetchFeatureExtractionJSON(wiki_id).then((data) => {
   const most_occurred_entities = data.most_occurred_entities;
   const tableData = most_occurred_entities.map((entity) => {
@@ -149,12 +159,33 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
       wiki_id: entity.wiki_id,
     };
   });
+  
+  const mainEntity = data.main_entity;
+  const mainEntityName = mainEntity?.name;
+  if (mainEntityName) {
+    document.title = "Wiki: " + mainEntityName;
+    const mainHeading = document.getElementById("main-heading");
+    mainHeading.innerHTML = `<h1>Wiki: ${mainEntityName}</h1>`;
+  }
+  
+  const infobox = document.getElementById("infobox");
+  infobox.innerHTML = `<h2>Infobox</h2>`;
+  // fetch summary from wikipedia 
+    getWikiInfo(wiki_id).then((data2) => {
+        infobox.innerHTML += `<hr>`;
+        infobox.innerHTML += `<h2><strong>${data.main_entity?.name}</strong></h2>`;
+        getFirstParagraph(data.main_entity?.name).then((description) => {
+            infobox.innerHTML += `<p>${description}</p>`;
+            infobox.innerHTML += `<p><h2>Instance Of</h2>${data2.instance_of}</p>`;
+        });
+    });
+  
 
   const tableContainer = document.getElementById("tableContainer");
-  tableContainer.parentNode.classList.remove("not-active");
-  tableContainer.parentNode.classList.add("card");
+  // tableContainer.parentNode.classList.remove("not-active");
+  // tableContainer.parentNode.classList.add("card");
 
-  tableContainer.innerHTML = "";
+  tableContainer.innerHTML = "<h2>Co-occurrence Count Table</h2>";
   const table = Inputs.table(tableData, {
     columns: [
       "occurrence_count",
@@ -168,23 +199,21 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
       name: "Entity Name",
       description: "Description",
       instance_of: "Instance Of",
-      wiki_id: "Wiki ID",
+      wiki_id: "Wiki",
     },
     format: {
-      wiki_id: (value) => {
-        return value.toString();
-      },
+      wiki_id: (value) => htl.html`<a href="http://hocamsimdi.com.tr/wiki?id=${value}">${value}</a>`,
     },
     width: {
       occurrence_count: 30,
       name: 100,
       description: 200,
-      instance_of: 150,
-      wiki_id: 0,
+      instance_of: 120,
+      wiki_id: 60,
     },
     rows: 20,
   });
-
+  
   tableContainer.appendChild(table);
   const descriptionCells = table.querySelectorAll("tbody td:nth-last-child(3)");
   const instanceOfCells = table.querySelectorAll("tbody td:nth-last-child(2)");
@@ -206,7 +235,14 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
 
   updateTableData(table);
 
-  const main_entity = data.main_entity?.sentiments_extended;
+  let main_entity = data.main_entity?.sentiments_extended;
+  if (main_entity.length == 1) {
+      console.warn("No sentiment data found");
+      main_entity = data.most_occurred_entities[0]?.sentiments_extended;
+  }
+  
+  console.log(main_entity);
+  
   const negatives = main_entity
     .map((d) => -d?.negative)
     .filter((d) => d?.negative != 0);
@@ -222,7 +258,7 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
 
   const chart = Plot.plot({
     x: {
-      label: "Value Range (0 to 1)",
+      label: "Value Range (-1 to 1)",
       domain: [-1, 1],
     },
     y: {
@@ -245,16 +281,12 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
       }),
       Plot.ruleY([0]),
     ],
-    width: 1200,
-    height: 600,
+    width: 600,
+    height: 300,
   });
-  const heading = document.createElement("h2");
-  heading.textContent = `Occurrence count histogram`;
-  histogram_2.parentNode.classList.remove("not-active");
-  histogram_2.parentNode.classList.add("card");
-  histogram_2.innerHTML = "";
-  histogram_2.appendChild(heading);
-  histogram_2.appendChild(chart);
+  
+  const histogramContainer = document.getElementById("sentiment-histogram");
+  histogramContainer.appendChild(chart);
 });
 ```
 
@@ -277,35 +309,15 @@ function enableZoomAndPanGraph() {
 
 const graphContainer = document.getElementById("graph");
 
-/*
-{
-                            nodes: [
-                                {
-                                    id: int,
-                                    name: str,
-                                    type: str
-                                }
-                            ],
-                            links: [
-                                {
-                                    source: int,
-                                    target: int,
-                                    type: str
-                                }
-                            ]
-                        }
- */
-
 createForceGraph(wiki_id)
   .then((svg) => {
-    // First clear the graph container to prevent multiple graphs from being displayed
-    graphContainer.innerHTML = "";
-    // Append the SVG to the container
+    graphContainer.innerHTML = "<h2>Graph</h2>";
     graphContainer.appendChild(svg);
     enableZoomAndPanGraph();
   })
   .catch((error) => {
     console.error("Error fetching graph data:", error);
-    graphContainer.textContent = "Error loading graph data";
+    graphContainer.textContent = "Error loading graph data, please try again";
   });
+
 ```
