@@ -6,17 +6,19 @@
     "build": "rimraf dist && observable build",
     "dev": "observable preview",
     "deploy": "observable deploy",
-    "observable": "observable"
+    "observable": "observable preview"
   },
   "dependencies": {
     "@observablehq/framework": "^1.7.0",
     "@observablehq/inputs": "^0.10.6",
+    "@observablehq/plot": "^0.6.14",
+    "d3": "^7.9.0",
     "d3-dsv": "^3.0.1",
     "d3-selection": "^2.0.0",
     "d3-time": "^2.1.1",
     "d3-time-format": "^4.1.0",
     "d3-timer": "^2.0.0",
-    "d3-transition": "^2.0.0",
+    "d3-transition": "^3.0.1",
     "delaunator": "^4.0.1",
     "displacy": "^1.1.0",
     "htl": "^0.3.1"
