@@ -4,13 +4,14 @@ import * as htl from "../.observablehq/cache/_npm/htl@0.3.1/_esm.js";
 
 export async function createForceGraph(wikiId) {
   try {
-
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 45000)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 45000);
 
     const response = await fetch(
       `https://project-x-back-a4ab947e69c6.herokuapp.com/graph?id=${wikiId}`,
-        { signal: controller.signal }
+      {
+        signal: controller.signal,
+      }
     );
     const data = await response.json();
 
@@ -45,8 +46,8 @@ export async function createForceGraph(wikiId) {
         nodeGroup: (d) => (d.sentiment > 0 ? "positive" : "negative"),
         nodeTitle: (d) => `${d.title}\nSentiment: ${d.sentiment}`,
         linkStrokeWidth: (l) => l.thickness,
-        width: window.innerWidth - 20,
-        height: window.innerHeight - 20,
+        width: 1000,
+        height: 550,
       }
     );
 
@@ -137,10 +138,12 @@ function ForceGraph({ nodes, links, wikiId }, options = {}) {
     .create("svg")
     .attr("width", width)
     .attr("height", height)
-    .attr("min-width", 800)
-    .attr("min-height", 800)
-    .attr("viewBox", [-width / 2, -height, width, height])
-    .attr("style", "max-width: 100%; height: auto;")
+    .attr("min-width", 600)
+    .attr("min-height", 600)
+    .attr("max-width", 1000)
+    .attr("max-height", 1000)
+    .attr("viewBox", [-width / 2, -height / 2, width, height])
+    .attr("style", "height: auto;")
     .on("click", svgClickHandler);
 
   const link = svg
@@ -319,7 +322,7 @@ function ForceGraph({ nodes, links, wikiId }, options = {}) {
         name: node.title,
         sentiment: node.sentiment,
         relatedness: node.weight,
-        wiki: node.id
+        wiki: node.id,
       };
     });
 
@@ -329,23 +332,22 @@ function ForceGraph({ nodes, links, wikiId }, options = {}) {
         name: "Name",
         sentiment: "Sentiment",
         relatedness: "Relatedness",
-        wiki: "Wiki"
+        wiki: "Wiki",
       },
       format: {
         sentiment: (d) => d.toFixed(2),
         relatedness: (d) => d.toFixed(2),
-        wiki: (d) => htl.html`<a href="http://hocamsimdi.com.tr/wiki?id=${d}" target="_blank">${d}</a>`
+        wiki: (d) =>
+          htl.html`<a href="http://hocamsimdi.com.tr/wiki?id=${d}" target="_blank">${d}</a>`,
       },
       width: {
         name: 200,
         sentiment: 100,
         relatedness: 100,
-        wiki: 100
+        wiki: 100,
       },
       rows: 20,
       search: true,
-
-
     });
 
     neighboursTable.appendChild(table);
