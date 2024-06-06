@@ -96,6 +96,10 @@ function updateInstanceOf(rowsMap) {
 ```
 
 ```js
+import * as Inputs from "@observablehq/inputs";
+import * as Plot from "@observablehq/plot";
+import * as htl from "htl";
+
 const base = document.getElementById("base");
 const histogram = document.getElementById("histogram");
 const histogramContainer = document.getElementById("sentiment-histogram");
