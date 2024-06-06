@@ -220,7 +220,7 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
     },
     rows: 20,
   });
-
+  table.style.overflow = "auto";
   tableContainer.appendChild(table);
   const descriptionCells = table.querySelectorAll("tbody td:nth-last-child(3)");
   const instanceOfCells = table.querySelectorAll("tbody td:nth-last-child(2)");
