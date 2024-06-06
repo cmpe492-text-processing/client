@@ -182,10 +182,12 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
   getWikiInfo(wiki_id).then((data2) => {
     infobox.innerHTML += `<hr>`;
     infobox.innerHTML += `<h2><strong>${data.main_entity?.name}</strong></h2>`;
-    getFirstParagraph(data.main_entity?.name, data2.description).then((description) => {
-      infobox.innerHTML += `<p>${description}</p>`;
-      infobox.innerHTML += `<p><h2>Instance Of</h2>${data2.instance_of}</p>`;
-    });  
+    getFirstParagraph(data.main_entity?.name, data2.description).then(
+      (description) => {
+        infobox.innerHTML += `<p>${description}</p>`;
+        infobox.innerHTML += `<p><h2>Instance Of</h2>${data2.instance_of}</p>`;
+      }
+    );
   });
 
   const tableContainer = document.getElementById("tableContainer");
