@@ -113,19 +113,6 @@ async function fetchFeatureExtractionJSON(wikiId) {
   return response.json();
 }
 
-async function getFirstParagraph(title) {
-  const url = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=extracts&exintro&explaintext&titles=${title}`;
-  const response = await fetch(url);
-  const data = await response.json();
-
-  const page = Object.values(data.query.pages)[0];
-  const description = page.extract
-    ? page.extract.split("\n")[0]
-    : "No description available.";
-
-  return description;
-}
-
 function updateTableData(table) {
   const tBody = table.querySelector("tbody");
   const rows = tBody.querySelectorAll("tr");
@@ -182,10 +169,8 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
   getWikiInfo(wiki_id).then((data2) => {
     infobox.innerHTML += `<hr>`;
     infobox.innerHTML += `<h2><strong>${data.main_entity?.name}</strong></h2>`;
-    getFirstParagraph(data.main_entity?.name).then((description) => {
-      infobox.innerHTML += `<p>${description}</p>`;
-      infobox.innerHTML += `<p><h2>Instance Of</h2>${data2.instance_of}</p>`;
-    });
+    infobox.innerHTML += `<p>${data2.description}</p>`;
+    infobox.innerHTML += `<p><h2>Instance Of</h2>${data2.instance_of}</p>`;
   });
 
   const tableContainer = document.getElementById("tableContainer");
