@@ -216,9 +216,9 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
       name: 100,
       description: 200,
       instance_of: 120,
-      wiki_id: 60,
-    },
-    rows: 20,
+      wiki_id: 60
+    }, 
+      rows:20,
   });
   table.style.overflow = "auto";
   tableContainer.appendChild(table);
@@ -242,6 +242,7 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
 
   updateTableData(table);
 
+  
   let main_entity = data.main_entity?.sentiments_extended;
   if (main_entity.length == 1) {
     console.warn("No sentiment data found");
