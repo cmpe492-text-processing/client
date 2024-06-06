@@ -78,6 +78,20 @@ function getWikiInfo(wiki_id) {
     });
 }
 
+async function getFirstParagraph(title, defualt_description) {
+    const url = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=extracts&exintro&explaintext&titles=${title}`;
+    const response = await fetch(url);
+    const data = await response.json();
+
+    const page = Object.values(data.query.pages)[0];
+    const description = page.extract
+        ? page.extract.split("\n")[0]
+        : defualt_description;
+
+    return description;
+}
+
+
 function updateDescriptions(rowsMap) {
   rowsMap.forEach((cell, wiki_id) => {
     getWikiInfo(wiki_id).then((data) => {
@@ -96,6 +110,10 @@ function updateInstanceOf(rowsMap) {
 ```
 
 ```js
+import * as Inputs from "@observablehq/inputs";
+import * as Plot from "@observablehq/plot";
+import * as htl from "htl";
+
 const base = document.getElementById("base");
 const histogram = document.getElementById("histogram");
 const histogramContainer = document.getElementById("sentiment-histogram");
@@ -161,17 +179,16 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
 
   const infobox = document.getElementById("infobox");
   infobox.innerHTML = `<h2>Infobox</h2>`;
-  // fetch summary from wikipedia
   getWikiInfo(wiki_id).then((data2) => {
     infobox.innerHTML += `<hr>`;
     infobox.innerHTML += `<h2><strong>${data.main_entity?.name}</strong></h2>`;
-    infobox.innerHTML += `<p>${data2.description}</p>`;
-    infobox.innerHTML += `<p><h2>Instance Of</h2>${data2.instance_of}</p>`;
+    getFirstParagraph(data.main_entity?.name, data2.description).then((description) => {
+      infobox.innerHTML += `<p>${description}</p>`;
+      infobox.innerHTML += `<p><h2>Instance Of</h2>${data2.instance_of}</p>`;
+    });  
   });
 
   const tableContainer = document.getElementById("tableContainer");
-  // tableContainer.parentNode.classList.remove("not-active");
-  // tableContainer.parentNode.classList.add("card");
 
   tableContainer.innerHTML = "<h2>Co-occurrence Count Table</h2>";
   const table = Inputs.table(tableData, {
@@ -198,9 +215,8 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
       name: 100,
       description: 200,
       instance_of: 120,
-      wiki_id: 60,
+      wiki_id: 60
     },
-    rows: 20,
   });
 
   tableContainer.appendChild(table);
@@ -224,13 +240,12 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
 
   updateTableData(table);
 
+  
   let main_entity = data.main_entity?.sentiments_extended;
   if (main_entity.length == 1) {
     console.warn("No sentiment data found");
     main_entity = data.most_occurred_entities[0]?.sentiments_extended;
   }
-
-  console.log(main_entity);
 
   const negatives = main_entity
     .map((d) => -d?.negative)
