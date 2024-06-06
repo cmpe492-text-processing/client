@@ -216,7 +216,8 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
       description: 200,
       instance_of: 120,
       wiki_id: 60
-    },
+    }, 
+      rows:20,
   });
 
   tableContainer.appendChild(table);
