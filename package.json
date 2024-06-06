@@ -13,7 +13,8 @@
     "@observablehq/inputs": "^0.10.6",
     "d3-dsv": "^3.0.1",
     "d3-time-format": "^4.1.0",
-    "displacy": "^1.1.0"
+    "displacy": "^1.1.0",
+    "htl": "^0.3.1"
   },
   "devDependencies": {
     "rimraf": "^5.0.5"
