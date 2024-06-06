@@ -27,13 +27,16 @@ sidebar: false
   not-active {
     display: none;
   }
+
+  .card {
+    overflow: hidden;
+  }
 </style>
 ```
 
 <div id="main-heading" style="display: flex; justify-content: center; align-items: center; flex-direction: column">
   <h1>Wiki: </h1>
 </div>
-
 
 <div class="grid grid-cols-3">
     <div id="infobox" class="card grid-colspan-1 grid-rowspan-2">
@@ -61,7 +64,6 @@ sidebar: false
     <div class="not-active grid-colspan-1 grid-rowspan-1">
     </div>    
 </div>
-  
 
 ```js
 function getWikiInfo(wiki_id) {
@@ -108,14 +110,16 @@ async function fetchFeatureExtractionJSON(wikiId) {
 }
 
 async function getFirstParagraph(title) {
-    const url = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=extracts&exintro&explaintext&titles=${title}`;
-    const response = await fetch(url);
-    const data = await response.json();
+  const url = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=extracts&exintro&explaintext&titles=${title}`;
+  const response = await fetch(url);
+  const data = await response.json();
 
-    const page = Object.values(data.query.pages)[0];
-    const description = page.extract ? page.extract.split('\n')[0] : 'No description available.';
+  const page = Object.values(data.query.pages)[0];
+  const description = page.extract
+    ? page.extract.split("\n")[0]
+    : "No description available.";
 
-    return description;
+  return description;
 }
 
 function updateTableData(table) {
@@ -159,7 +163,7 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
       wiki_id: entity.wiki_id,
     };
   });
-  
+
   const mainEntity = data.main_entity;
   const mainEntityName = mainEntity?.name;
   if (mainEntityName) {
@@ -167,19 +171,18 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
     const mainHeading = document.getElementById("main-heading");
     mainHeading.innerHTML = `<h1>Wiki: ${mainEntityName}</h1>`;
   }
-  
+
   const infobox = document.getElementById("infobox");
   infobox.innerHTML = `<h2>Infobox</h2>`;
-  // fetch summary from wikipedia 
-    getWikiInfo(wiki_id).then((data2) => {
-        infobox.innerHTML += `<hr>`;
-        infobox.innerHTML += `<h2><strong>${data.main_entity?.name}</strong></h2>`;
-        getFirstParagraph(data.main_entity?.name).then((description) => {
-            infobox.innerHTML += `<p>${description}</p>`;
-            infobox.innerHTML += `<p><h2>Instance Of</h2>${data2.instance_of}</p>`;
-        });
+  // fetch summary from wikipedia
+  getWikiInfo(wiki_id).then((data2) => {
+    infobox.innerHTML += `<hr>`;
+    infobox.innerHTML += `<h2><strong>${data.main_entity?.name}</strong></h2>`;
+    getFirstParagraph(data.main_entity?.name).then((description) => {
+      infobox.innerHTML += `<p>${description}</p>`;
+      infobox.innerHTML += `<p><h2>Instance Of</h2>${data2.instance_of}</p>`;
     });
-  
+  });
 
   const tableContainer = document.getElementById("tableContainer");
   // tableContainer.parentNode.classList.remove("not-active");
@@ -202,7 +205,8 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
       wiki_id: "Wiki",
     },
     format: {
-      wiki_id: (value) => htl.html`<a href="http://hocamsimdi.com.tr/wiki?id=${value}">${value}</a>`,
+      wiki_id: (value) =>
+        htl.html`<a href="http://hocamsimdi.com.tr/wiki?id=${value}">${value}</a>`,
     },
     width: {
       occurrence_count: 30,
@@ -213,7 +217,7 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
     },
     rows: 20,
   });
-  
+
   tableContainer.appendChild(table);
   const descriptionCells = table.querySelectorAll("tbody td:nth-last-child(3)");
   const instanceOfCells = table.querySelectorAll("tbody td:nth-last-child(2)");
@@ -237,12 +241,12 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
 
   let main_entity = data.main_entity?.sentiments_extended;
   if (main_entity.length == 1) {
-      console.warn("No sentiment data found");
-      main_entity = data.most_occurred_entities[0]?.sentiments_extended;
+    console.warn("No sentiment data found");
+    main_entity = data.most_occurred_entities[0]?.sentiments_extended;
   }
-  
+
   console.log(main_entity);
-  
+
   const negatives = main_entity
     .map((d) => -d?.negative)
     .filter((d) => d?.negative != 0);
@@ -284,7 +288,7 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
     width: 600,
     height: 300,
   });
-  
+
   const histogramContainer = document.getElementById("sentiment-histogram");
   histogramContainer.appendChild(chart);
 });
@@ -319,5 +323,4 @@ createForceGraph(wiki_id)
     console.error("Error fetching graph data:", error);
     graphContainer.textContent = "Error loading graph data, please try again";
   });
-
 ```
