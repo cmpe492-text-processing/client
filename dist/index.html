@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Social Synapse</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Source+Serif+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&amp;display=swap" crossorigin>
+<link rel="preload" as="style" href="./_observablehq/theme-air.css">
+<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css2?family=Source+Serif+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&amp;display=swap" crossorigin>
+<link rel="stylesheet" type="text/css" href="./_observablehq/theme-air.css">
+<link rel="modulepreload" href="./_observablehq/client.js">
+<link rel="modulepreload" href="./_observablehq/runtime.js">
+<link rel="modulepreload" href="./_observablehq/stdlib.js">
+<link rel="modulepreload" href="./_npm/d3@7.9.0/_esm.js">
+<link rel="modulepreload" href="./_npm/@observablehq/plot@0.6.14/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-array@3.2.4/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-axis@3.0.0/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-brush@3.0.0/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-chord@3.0.1/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-color@3.1.0/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-contour@4.0.2/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-delaunay@6.0.4/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-dispatch@3.0.1/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-drag@3.0.0/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-dsv@3.0.1/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-ease@3.0.1/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-fetch@3.0.1/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-force@3.0.0/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-format@3.1.0/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-geo@3.1.1/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-hierarchy@3.1.2/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-interpolate@3.0.1/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-path@3.1.0/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-polygon@3.0.1/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-quadtree@3.0.1/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-random@3.0.1/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-scale@4.0.2/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-scale-chromatic@3.1.0/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-selection@3.0.0/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-shape@3.2.0/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-time@3.1.0/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-time-format@4.1.0/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-timer@3.0.1/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-transition@3.0.1/_esm.js">
+<link rel="modulepreload" href="./_npm/d3-zoom@3.0.0/_esm.js">
+<link rel="modulepreload" href="./_npm/isoformat@0.2.1/_esm.js">
+<link rel="modulepreload" href="./_npm/interval-tree-1d@1.0.4/_esm.js">
+<link rel="modulepreload" href="./_npm/internmap@2.0.3/_esm.js">
+<link rel="modulepreload" href="./_npm/delaunator@5.0.1/_esm.js">
+<link rel="modulepreload" href="./_npm/binary-search-bounds@2.0.5/_esm.js">
+<link rel="modulepreload" href="./_npm/robust-predicates@3.0.2/_esm.js">
+<link rel="icon" href="./_file/project-x.6d925d58.jpeg" type="image/jpeg" sizes="32x32">
+<script type="module">
+
+import {define} from "./_observablehq/client.js";
+
+define({id: "335a6410", inputs: ["Plot","d3"], outputs: ["sentimentChart","enableZoomAndPan"], body: (Plot,d3) => {
+function sentimentChart(data, { width }) {
+  return Plot.plot({
+    width: width,
+    minWidth: 800,
+    height: 500,
+    marginTop: 20,
+    marginLeft: 50,
+    y: { domain: [-1, 1], grid: true, label: "Score" },
+    x: { domain: data.map((d) => d.sentiment), label: null },
+    marks: [
+      Plot.barY(data, { x: "sentiment", y: "score", fill: "color", tip: true }),
+      Plot.ruleY([0]),
+    ],
+  });
+}
+
+function enableZoomAndPan() {
+  const svg = d3.select("#part-of-speech svg");
+  const container = d3.select("#part-of-speech");
+
+  // Select both 'g' and 'text' elements
+  const elements = svg.selectAll(".displacy-token, .displacy-arrow");
+
+  const zoom = d3
+    .zoom()
+    .scaleExtent([0.1, 8]) // Limits for zoom scaling (0.5x to 8x)
+    .on("zoom", (event) => {
+      elements.attr("transform", event.transform); // Apply transformations to both 'g' and 'text' elements
+    });
+
+  container.call(zoom);
+}
+
+document
+  .getElementById("search-bar")
+  .addEventListener("keypress", function (event) {
+    if (event.key === "Enter") {
+      const query = event.target.value;
+      fetch(
+        `https://project-x-back-a4ab947e69c6.herokuapp.com/search?q=${encodeURIComponent(
+          query
+        )}`
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          console.log("Search results:", data);
+          const results_sentiment =
+            document.getElementById("results-sentiment");
+          const results_table = document.getElementById("results-table");
+          results_sentiment.innerHTML = "";
+          results_table.innerHTML = "";
+
+          const plotData = [
+            {
+              sentiment: " Compound",
+              score: data.scores.compound,
+              color: data.scores.compound >= 0 ? "#4caf50" : "#f44336",
+            },
+            {
+              sentiment: " Positive",
+              score: data.scores.pos,
+              color: "#2196f3",
+            },
+            {
+              sentiment: " Negative",
+              score: -data.scores.neg,
+              color: "#f44336",
+            },
+            { sentiment: " Neutral", score: data.scores.neu, color: "#ffeb3b" },
+          ];
+
+          const containerWidth = d3
+            .select("#part-of-speech")
+            .node()
+            .getBoundingClientRect().width;
+          const chartWidth = containerWidth < 800 ? 500 : containerWidth * 0.5;
+
+          const chart = sentimentChart(plotData, { width: chartWidth });
+
+          const text = data.text;
+          const entities = data.entities;
+          const textDiv = document.createElement("div");
+
+          let i = 0;
+          entities.forEach((entity) => {
+            textDiv.innerHTML += text.slice(i, entity.begin);
+            const link = document.createElement("a");
+            link.href = `http://hocamsimdi.com.tr/wiki?id=${entity.wiki_id}`;
+            link.textContent = entity.mention;
+            textDiv.appendChild(link);
+            i = entity.end;
+          });
+          textDiv.innerHTML += text.slice(i);
+          results_table.appendChild(textDiv);
+          results_sentiment.appendChild(chart);
+
+          const url = `https://project-x-back-a4ab947e69c6.herokuapp.com/part-of-speech?q=${encodeURIComponent(
+            query
+          )}`;
+
+          fetch(url)
+            .then((response) => {
+              if (response.status === 204) {
+                console.error("Empty query");
+                return;
+              }
+              if (!response.ok) {
+                throw new Error("Network response was not ok");
+              }
+              return response.text();
+            })
+            .then((svg) => {
+              const container = document.getElementById("part-of-speech");
+              container.classList.remove("display-none"); // Remove the 'display-none' class
+              container.classList.add("display-block"); // Add the 'display-block' class
+              container.classList.add("part-of-speech-active"); // Add the 'part-of-speech-active' class
+              const width = svg.match(/width="(\d+)"/)[1] + "px"; // Extract the width from the SVG
+              container.style.width = width;
+
+              container.innerHTML = svg; // Insert the SVG directly into the div
+              enableZoomAndPan(); // Enable zoom and pan after SVG is loaded
+            })
+            .catch((error) =>
+              console.error(
+                "There was a problem with the fetch operation:",
+                error
+              )
+            );
+        })
+        .catch((error) =>
+          console.error("Error fetching search results:", error)
+        );
+    }
+  });
+return {sentimentChart,enableZoomAndPan};
+}});
+
+</script>
+<div id="observablehq-center">
+<main id="observablehq-main" class="observablehq">
+<style>
+    #part-of-speech {
+    }
+
+    .part-of-speech-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .results-sentiment-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .part-of-speech-active {
+        max-width: 100%;
+        height: 100%;
+        padding: 10px;
+        overflow: hidden;
+        background-color: #0000;
+        border-radius: 5px; 
+        border: 1px solid #ccc;
+    }
+    @media (max-width: 768px) {
+        .svg-container {
+            height: 400px; /* Adjust height for smaller devices */
+        }
+    }
+    .svg-container {
+        max-width: 100%;
+        height: 600px;    /* Sufficient height to display SVG */
+        border: 2px solid #1111; /* Solid green border */
+        border-radius: 8px; /* Rounded corners */
+        box-shadow: 0 4px 8px rgba(0,0,0,0); /* Subtle shadow for depth */
+        background-color: #f9f9f9; /* Light grey background */
+        overflow-x: auto; /* Allows horizontal scrolling */
+        overflow-y: hidden; /* Disables vertical scrolling */
+        padding: 20px; /* Padding inside the container for some spacing around the SVG */
+    }
+</style>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<div style="display: flex; justify-content: center; align-items: center; flex-direction: column">
+    <h1>Search any sentence</h1>
+    <br>
+    <input type="text" id="search-bar" placeholder="Donald Trump called Joe Biden 'Dumb Joe'" style="width: 100%; padding: 10px; font-size: 16px;  box-shadow: 0 5px 2px rgba(0,0,0,0.1);">
+    <br>
+    <br>
+</div>
+<div id="results-table" style="font-size: xx-large; display: flex; justify-content: center; align-items: center;"></div>
+<br>
+<br>
+<div class="part-of-speech-container">
+<div id="part-of-speech" class="`svg-container" display-none`=""></div>
+</div>
+<br>
+<div class="results-sentiment-container">
+<div id="results-sentiment"></div>
+</div>
+<br>
+<div id="cell-335a6410" class="observablehq observablehq--block"></div>
+</main>
+<footer id="observablehq-footer">
+<div>The Social Synapse, 2024</div>
+</footer>
+</div>
