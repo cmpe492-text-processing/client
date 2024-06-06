@@ -28,7 +28,7 @@ sidebar: false
     display: none;
   }
 
-  .card {
+  .graph-overflow {
     overflow: hidden;
   }
 </style>
@@ -45,7 +45,7 @@ sidebar: false
     <div id="tableContainer" class="card grid-colspan-2 grid-rowspan-2">
         <h2>Co-occurrence Count Table</h2>
     </div>
-    <div id="graph" class="card grid-colspan-2 grid-rowspan-3">
+    <div id="graph" class="card grid-colspan-2 grid-rowspan-3 graph-overflow">
         <h2>Graph</h2>
         <div id="tooltip"></div>
     </div>
