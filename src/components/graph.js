@@ -1,6 +1,6 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@6/+esm";
 import * as Inputs from "npm:@observablehq/inputs";
-import * as htl from "../.observablehq/cache/_npm/htl@0.3.1/_esm.js";
+import * as htl from "npm:htl@0.3.1";
 
 export async function createForceGraph(wikiId) {
   try {
