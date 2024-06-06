@@ -79,18 +79,17 @@ function getWikiInfo(wiki_id) {
 }
 
 async function getFirstParagraph(title, defualt_description) {
-    const url = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=extracts&exintro&explaintext&titles=${title}`;
-    const response = await fetch(url);
-    const data = await response.json();
+  const url = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=extracts&exintro&explaintext&titles=${title}`;
+  const response = await fetch(url);
+  const data = await response.json();
 
-    const page = Object.values(data.query.pages)[0];
-    const description = page.extract
-        ? page.extract.split("\n")[0]
-        : defualt_description;
+  const page = Object.values(data.query.pages)[0];
+  const description = page.extract
+    ? page.extract.split("\n")[0]
+    : defualt_description;
 
-    return description;
+  return description;
 }
-
 
 function updateDescriptions(rowsMap) {
   rowsMap.forEach((cell, wiki_id) => {
@@ -182,10 +181,12 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
   getWikiInfo(wiki_id).then((data2) => {
     infobox.innerHTML += `<hr>`;
     infobox.innerHTML += `<h2><strong>${data.main_entity?.name}</strong></h2>`;
-    getFirstParagraph(data.main_entity?.name, data2.description).then((description) => {
-      infobox.innerHTML += `<p>${description}</p>`;
-      infobox.innerHTML += `<p><h2>Instance Of</h2>${data2.instance_of}</p>`;
-    });  
+    getFirstParagraph(data.main_entity?.name, data2.description).then(
+      (description) => {
+        infobox.innerHTML += `<p>${description}</p>`;
+        infobox.innerHTML += `<p><h2>Instance Of</h2>${data2.instance_of}</p>`;
+      }
+    );
   });
 
   const tableContainer = document.getElementById("tableContainer");
@@ -215,8 +216,9 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
       name: 100,
       description: 200,
       instance_of: 120,
-      wiki_id: 60
+      wiki_id: 60,
     },
+    rows: 20,
   });
 
   tableContainer.appendChild(table);
@@ -240,7 +242,6 @@ fetchFeatureExtractionJSON(wiki_id).then((data) => {
 
   updateTableData(table);
 
-  
   let main_entity = data.main_entity?.sentiments_extended;
   if (main_entity.length == 1) {
     console.warn("No sentiment data found");
