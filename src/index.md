@@ -51,7 +51,7 @@ sidebar: false
 <div style="display: flex; justify-content: center; align-items: center; flex-direction: column">
     <h1>Search any sentence</h1>
     <br>
-    <input type="text" id="search-bar" style="width: 100%; padding: 10px; font-size: 16px;  box-shadow: 0 5px 2px rgba(0,0,0,0.1);">
+    <input type="text" id="search-bar" placeholder="Donald Trump called Joe Biden 'Dumb Joe'" style="width: 100%; padding: 10px; font-size: 16px;  box-shadow: 0 5px 2px rgba(0,0,0,0.1);">
     <br>
     <br>
 </div>
